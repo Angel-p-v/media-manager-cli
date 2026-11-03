@@ -5,7 +5,6 @@ import { Command, CommanderError } from 'commander';
 
 import { generateCompletion } from './commands/completion.js';
 import { runConfigCommand } from './commands/config.js';
-import { runContinueCommand } from './commands/continue.js';
 import {
   runDbBackupCommand,
   runDbOptimizeCommand,
@@ -14,25 +13,17 @@ import {
 } from './commands/db.js';
 import { runDoctorCommand } from './commands/doctor.js';
 import { reportFatalError } from './commands/errorHandler.js';
-import { runFavoriteCommand } from './commands/favorite.js';
-import { runHistoryCommand } from './commands/history.js';
 import { runIndexCommand } from './commands/index.js';
 import { runListCommand } from './commands/list.js';
-import { runMarkCommand } from './commands/mark.js';
-import { runMetadataCommand } from './commands/metadata.js';
 import {
   parseMediaType,
   parseNonNegativeInteger,
   parsePositiveInteger,
   parseSortOrder,
 } from './commands/options.js';
-import { runPlayCommand } from './commands/play.js';
 import { runPlaylistCommand, type PlaylistCommandOptions } from './commands/playlist.js';
-import { runSearchCommand } from './commands/search.js';
 import { runSelfUpdateCommand } from './commands/self-update.js';
 import { runShowCommand } from './commands/show.js';
-import { runTagCommand, parseTagOptions } from './commands/tag.js';
-import { runWatchCommand } from './commands/watch.js';
 import { loadConfig, resolveConfigPath } from './core/config/loader.js';
 import { getVersion } from './shared/version.js';
 import { runTui, defaultLogFile } from './ui/run.js';
@@ -46,11 +37,11 @@ const program = new Command()
   .showHelpAfterError()
   .addHelpText(
     'before',
-    '\nÍndice de comandos:\n  list / search / show   explorar la biblioteca\n  play / continue        reproducir títulos\n  index / watch          mantener la biblioteca actualizada\n  metadata / doctor      metadatos externos y diagnóstico\n  config / tag / favorite  ajustes y etiquetas\n  db / self-update / completion  utilidades avanzadas\n',
+    '\nÍndice de comandos:\n  list / show   explorar la biblioteca\n  index         mantener la biblioteca actualizada\n  doctor        diagnóstico\n  config        ajustes\n  db / self-update / completion  utilidades avanzadas\n',
   )
   .addHelpText(
     'after',
-    '\nEjemplos de uso:\n  mm                              abre la interfaz interactiva (TUI)\n  mm list                         lista todos los títulos indexados\n  mm search "Black Torch"         busca un título por nombre\n  mm show 1                       muestra el detalle del título #1\n  mm play 1                       reproduce el título #1\n  mm index                        indexa la biblioteca completa\n  mm metadata search "Black Torch"busca metadatos externos (TVMaze)\n  mm doctor                       diagnostica y repara la biblioteca\n  mm completion bash              genera script de autocompletado para bash\n\nCódigos de salida:\n  0  éxito\n  1  error de ejecución\n  2  uso incorrecto\n',
+    '\nEjemplos de uso:\n  mm                              abre la interfaz interactiva (TUI)\n  mm list                         lista todos los títulos indexados\n  mm show 1                       muestra el detalle del título #1\n  mm index                        indexa la biblioteca completa\n  mm doctor                       diagnostica y repara la biblioteca\n  mm completion bash              genera script de autocompletado para bash\n\nCódigos de salida:\n  0  éxito\n  1  error de ejecución\n  2  uso incorrecto\n',
   )
   .exitOverride();
 
@@ -95,25 +86,9 @@ program
   .option('--sort <orden>', 'ordena por title, added o recent', parseSortOrder)
   .option('--limit <n>', 'número máximo de resultados', parsePositiveInteger)
   .option('--offset <n>', 'resultados a saltar', parseNonNegativeInteger)
-  .option(
-    '--tag <id>',
-    'filtra por id de etiqueta (puede repetirse)',
-    (val: string, prev: number[] = []) => [...prev, Number(val)],
-    [],
-  )
   .option('--json', 'salida en formato JSON')
   .option('--export <formato>', 'exporta a archivo: json o csv')
   .action(runListCommand);
-
-program
-  .command('search')
-  .description('busca títulos por texto en la biblioteca indexada')
-  .argument('<consulta>', 'texto a buscar')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('-t, --type <tipo>', 'filtra por tipo (series, movie)', parseMediaType)
-  .option('--limit <n>', 'número máximo de resultados', parsePositiveInteger)
-  .option('--json', 'salida en formato JSON')
-  .action(runSearchCommand);
 
 program
   .command('show')
@@ -122,18 +97,6 @@ program
   .option('-c, --config <ruta>', 'archivo de configuración a usar')
   .option('--json', 'salida en formato JSON')
   .action(runShowCommand);
-
-program
-  .command('play')
-  .description('reproduce un título con el reproductor configurado (mpv/vlc)')
-  .argument('<id-o-titulo>', 'id numérico o título a reproducir')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('-f, --file <id>', 'id del fichero a reproducir', parsePositiveInteger)
-  .option('-p, --player <nombre>', 'reproductor alternativo al configurado')
-  .option('--foreground', 'espera a que el reproductor termine')
-  .option('--dry-run', 'muestra el comando sin lanzar el reproductor')
-  .option('--json', 'salida en formato JSON')
-  .action(runPlayCommand);
 
 program
   .command('playlist <titulos...>')
@@ -150,60 +113,6 @@ program
   });
 
 program
-  .command('continue')
-  .description('lista títulos en curso (reproducción pendiente)')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('-l, --limit <n>', 'máximo de resultados', parsePositiveInteger)
-  .option('--json', 'salida en formato JSON')
-  .action(runContinueCommand);
-
-program
-  .command('history')
-  .description('muestra el historial reciente de reproducciones')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('-l, --limit <n>', 'máximo de resultados', parsePositiveInteger)
-  .option('--json', 'salida en formato JSON')
-  .action(runHistoryCommand);
-
-program
-  .command('mark')
-  .description('marca estado visto/no visto o posición de reproducción de un título')
-  .argument('<id-o-titulo>', 'id numérico o título a marcar')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('-f, --file <id>', 'id del fichero (requerido si hay varios)', parsePositiveInteger)
-  .option('--watched', 'marca como visto')
-  .option('--unwatched', 'marca como no visto')
-  .option('--position <segundos>', 'guarda posición concreta', parseNonNegativeInteger)
-  .option('--json', 'salida en formato JSON')
-  .action(runMarkCommand);
-
-program
-  .command('favorite')
-  .description('marca o desmarca un título como favorito')
-  .argument('<id-o-titulo>', 'id numérico o título')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('--off', 'desmarca el favorito')
-  .option('--json', 'salida en formato JSON')
-  .action(runFavoriteCommand);
-
-program
-  .command('tag')
-  .description('gestiona etiquetas y su asignación a títulos')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('-a, --action <add|remove|list>', 'acción: add, remove o list')
-  .option('-m, --media <id>', 'id del título (requerido para add/remove)')
-  .option('-t, --tag <nombre>', 'nombre de la etiqueta (requerido para add/remove)')
-  .option('--json', 'salida en formato JSON')
-  .action((rawOptions: Record<string, unknown>) => {
-    const parsed = parseTagOptions(rawOptions);
-    // parseTagOptions retorna null si hay error de validación (ya estableció exitCode = 2)
-    if (parsed === null) {
-      return;
-    }
-    return runTagCommand(parsed);
-  });
-
-program
   .command('doctor')
   .description('diagnóstico y reparación de la biblioteca (índice y metadatos)')
   .option('-c, --config <ruta>', 'archivo de configuración a usar')
@@ -214,30 +123,12 @@ program
   .action(runDoctorCommand);
 
 program
-  .command('watch')
-  .description('vigila las raíces y reindexa al detectar cambios')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .action(runWatchCommand);
-
-program
   .command('self-update')
   .description('busca e instala actualizaciones desde GitHub Releases')
   .option('-c, --config <ruta>', 'archivo de configuración a usar')
   .option('--check', 'solo comprueba si hay actualización disponible')
   .option('--dry-run', 'muestra qué se descargaría sin instalar')
   .action(runSelfUpdateCommand);
-
-program
-  .command('metadata')
-  .description('gestiona metadatos externos (TVMaze para series y películas)')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('-a, --action <fetch|search|clear|cache>', 'acción: fetch, search, clear o cache')
-  .option('-m, --media-id <id>', 'id del título (requerido para fetch/clear)')
-  .option('-q, --query <texto>', 'consulta de búsqueda (requerido para search)')
-  .option('-p, --provider <tvmaze|default>', 'proveedor de metadatos (tvmaze o default)')
-  .option('-e, --external-id <id>', 'id externo (requerido para fetch)')
-  .option('--json', 'salida en formato JSON')
-  .action(runMetadataCommand);
 
 program
   .command('completion <shell>')
