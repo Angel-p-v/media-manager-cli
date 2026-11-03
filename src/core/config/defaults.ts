@@ -1,4 +1,5 @@
 import { defaultPlayers, metadataConfigSchema, playbackConfigSchema } from './schema.js';
+import { VIDEO_EXTENSIONS } from '../indexer/video.js';
 
 import type { AppConfig } from './schema.js';
 
@@ -10,6 +11,7 @@ export const defaultConfig: AppConfig = {
   version: 1,
   library: {
     roots: [],
+    videoExtensions: [...VIDEO_EXTENSIONS],
     exclude: ['**/*.sample.*', '**/sample/**', '**/.hidden/**', '**/@eaDir/**'],
     scan: {
       followSymlinks: false,

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { VIDEO_EXTENSIONS } from '../indexer/video.js';
+
 /** Tipos de contenido que la biblioteca puede contener. */
 export const mediaTypeSchema = z.enum(['series', 'movie', 'unknown']);
 
@@ -122,6 +124,14 @@ export const configSchema = z.object({
   library: z
     .object({
       roots: z.array(libraryRootSchema).default([]),
+      /**
+       * Extensiones de archivo que se indexan. Por defecto solo las de vídeo,
+       * de modo que subtítulos, portadas, texto u otros archivos no-vídeo que
+       * compartan carpeta no entran en el índice ni en el panel de la app.
+       */
+      videoExtensions: z
+        .array(z.string().min(1, 'la extensión no puede estar vacía'))
+        .default([...VIDEO_EXTENSIONS]),
       exclude: z
         .array(z.string())
         .default(['**/*.sample.*', '**/sample/**', '**/.hidden/**', '**/@eaDir/**']),

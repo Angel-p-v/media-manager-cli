@@ -12,7 +12,7 @@ library:
   # Carpetas raíz de tu biblioteca. El `type` ayuda a clasificar el contenido.
   roots:
     - path: ~/Media/Anime
-      type: anime
+      type: series
       label: Anime
     - path: ~/Media/Series
       type: series
@@ -20,6 +20,24 @@ library:
     - path: ~/Media/Peliculas
       type: movie
       label: Películas
+
+  # Extensiones de archivo que se indexan. Por defecto solo las de vídeo, de modo
+  # que subtítulos, portadas, texto u otros archivos no-vídeo que compartan carpeta
+  # no entran en el índice ni aparecen en el panel de la app.
+  videoExtensions:
+    - mkv
+    - mp4
+    - m4v
+    - avi
+    - mov
+    - webm
+    - wmv
+    - flv
+    - mpg
+    - mpeg
+    - m2ts
+    - ts
+    - ogv
 
   # Patrones (globs) que se ignoran al indexar.
   exclude:

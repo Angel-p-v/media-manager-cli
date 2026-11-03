@@ -17,8 +17,11 @@ export const VIDEO_EXTENSIONS: readonly string[] = [
   'ogv',
 ];
 
-/** Comprueba si una ruta tiene extensión de vídeo (sin distinguir mayúsculas). */
-export function isVideoFile(filePath: string): boolean {
+/** Comprueba si una ruta tiene una extensión de la lista indicada (sin distinguir mayúsculas). */
+export function isVideoFile(
+  filePath: string,
+  extensions: readonly string[] = VIDEO_EXTENSIONS,
+): boolean {
   const extension = path.extname(filePath).slice(1).toLowerCase();
-  return VIDEO_EXTENSIONS.includes(extension);
+  return extensions.includes(extension);
 }

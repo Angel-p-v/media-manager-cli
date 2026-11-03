@@ -3,10 +3,8 @@ import path from 'node:path';
 
 import { glob } from 'tinyglobby';
 
-import { VIDEO_EXTENSIONS } from './video.js';
+import { isVideoFile, VIDEO_EXTENSIONS } from './video.js';
 import { IndexError, formatError } from '../../shared/errors.js';
-
-const VIDEO_GLOB = `**/*.{${VIDEO_EXTENSIONS.join(',')}}`;
 
 /** Fichero de vídeo encontrado en disco. */
 export type ScannedFile = {
@@ -20,6 +18,8 @@ export type ScanLibraryOptions = {
   followSymlinks: boolean;
   minSizeBytes: number;
   exclude: readonly string[];
+  /** Extensiones de archivo que se indexan. Por defecto solo las de vídeo. */
+  videoExtensions?: readonly string[];
   /** Subcarpeta relativa dentro de rootPath para limitar el escaneo. */
   subfolder?: string;
 };
@@ -45,9 +45,12 @@ export async function scanLibrary(
     options.subfolder !== undefined ? path.join(rootPath, options.subfolder) : rootPath;
   await assertDirectory(scanRoot);
 
+  const extensions = options.videoExtensions ?? VIDEO_EXTENSIONS;
+  const videoGlob = `**/*.{${extensions.join(',')}}`;
+
   let matches: string[];
   try {
-    matches = await glob(VIDEO_GLOB, {
+    matches = await glob(videoGlob, {
       cwd: scanRoot,
       absolute: true,
       ignore: [...options.exclude],
@@ -66,7 +69,16 @@ export async function scanLibrary(
     matches.map(async (filePath): Promise<ScannedFile | null> => {
       try {
         const stats = await stat(filePath);
-        if (!stats.isFile() || stats.size < options.minSizeBytes) return null;
+        // Doble garantía: el glob ya filtra por extensión, pero se vuelve a
+        // comprobar por si la lista de extensiones cambia o el glob deja pasar
+        // algún archivo que no es realmente de vídeo.
+        if (
+          !stats.isFile() ||
+          stats.size < options.minSizeBytes ||
+          !isVideoFile(filePath, extensions)
+        ) {
+          return null;
+        }
         return { filePath, sizeBytes: stats.size, mtimeMs: stats.mtimeMs };
       } catch {
         return null;

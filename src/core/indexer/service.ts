@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { classifyFile, type ClassifiedFile } from './classifier.js';
 import { scanLibrary, type ScanLibraryOptions } from './scanner.js';
+import { VIDEO_EXTENSIONS } from './video.js';
 import { IndexError, formatError } from '../../shared/errors.js';
 import { resolvePath } from '../../shared/paths.js';
 
@@ -18,6 +19,8 @@ export type IndexLibraryConfig = {
   /** Puede ser un valor estático o un getter para recargar sin reiniciar (B3). */
   exclude: readonly string[] | (() => readonly string[]);
   scan: ScanOptions;
+  /** Extensiones de archivo que se indexan. Por defecto solo las de vídeo. */
+  videoExtensions?: readonly string[];
 };
 
 /** Repositorios que necesita la indexación, inyectados por el llamante (DIP). */
@@ -199,6 +202,7 @@ async function scanAndClassify(
       followSymlinks: library.scan.followSymlinks,
       minSizeBytes: library.scan.minSizeBytes,
       exclude: typeof library.exclude === 'function' ? library.exclude() : library.exclude,
+      videoExtensions: library.videoExtensions ?? VIDEO_EXTENSIONS,
     };
     if (rootSubfolder !== undefined) {
       scanOptions.subfolder = rootSubfolder;
