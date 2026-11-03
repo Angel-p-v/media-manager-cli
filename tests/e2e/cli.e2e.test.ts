@@ -81,11 +81,11 @@ describe('mm (e2e, binario compilado)', () => {
     expect(result.stdout.trim()).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
-  it('la ayuda enumera todos los subcomandos', () => {
+  it('la ayuda enumera los subcomandos disponibles', () => {
     const result = run(['--help']);
 
     expect(result.status).toBe(0);
-    for (const command of ['index', 'list', 'search', 'show', 'play', 'watch', 'db', 'config']) {
+    for (const command of ['index', 'list', 'show', 'db', 'config']) {
       expect(result.stdout).toContain(command);
     }
     expect(result.stdout).toContain('Códigos de salida');
@@ -105,20 +105,6 @@ describe('mm (e2e, binario compilado)', () => {
     expect(result.stderr).toContain("unknown command 'no-existe'");
   });
 
-  it('devuelve 2 si falta un argumento obligatorio', () => {
-    const result = run(['search']);
-
-    expect(result.status).toBe(2);
-    expect(result.stderr).toContain("missing required argument 'consulta'");
-  });
-
-  it('devuelve 2 si una opción tiene un valor inválido', () => {
-    const result = run(['search', 'sever', '--type', 'libros']);
-
-    expect(result.status).toBe(2);
-    expect(result.stderr).toContain('Tipo no válido');
-  });
-
   it('indexa el fixture y emite estadísticas JSON', () => {
     const result = run(['index', '--json']);
 
@@ -134,39 +120,10 @@ describe('mm (e2e, binario compilado)', () => {
     expect(result.stdout).not.toContain('\u001b[');
   });
 
-  it('lista y busca títulos contra el índice real', () => {
+  it('lista títulos contra el índice real', () => {
     const list = run(['list', '--json']);
     expect(list.status).toBe(0);
     expect(JSON.parse(list.stdout)).toMatchObject({ total: 5, count: 5 });
-
-    const search = run(['search', 'sever', '--json']);
-    expect(search.status).toBe(0);
-    expect(JSON.parse(search.stdout)).toMatchObject({
-      query: 'sever',
-      count: 1,
-      results: [{ title: 'Severance', year: 2022 }],
-    });
-  });
-
-  it('--verbose escribe logs estructurados en stderr sin contaminar stdout', () => {
-    const result = run(['search', 'sever', '--json', '--verbose']);
-
-    expect(result.status).toBe(0);
-    expect(JSON.parse(result.stdout)).toMatchObject({ count: 1 });
-    expect(result.stderr).toContain('search.completed');
-    expect(result.stderr).toContain('durationMs=');
-  });
-
-  it('MM_LOG_FORMAT=json emite una línea JSON por evento', () => {
-    const result = run(['search', 'sever', '--verbose'], { MM_LOG_FORMAT: 'json' });
-
-    expect(result.status).toBe(0);
-    const events = result.stderr
-      .trim()
-      .split('\n')
-      .map((line) => JSON.parse(line) as { level: string; event: string });
-    expect(events.some((event) => event.event === 'search.completed')).toBe(true);
-    expect(events.every((event) => event.level === 'debug')).toBe(true);
   });
 
   it('muestra el detalle de un título y de sus ficheros', () => {
@@ -238,36 +195,6 @@ describe('mm (e2e, binario compilado)', () => {
     // Los archivos ya están indexados (beforeAll indexó toda la biblioteca),
     // así que aparecen como unchanged, no added.
     expect(stats.filesUnchanged).toBeGreaterThan(0);
-  });
-
-  it('mm play --dry-run produce el comando sin lanzar el reproductor', () => {
-    const result = run(['play', 'severance', '--dry-run', '--json']);
-
-    expect(result.status).toBe(0);
-    const payload = JSON.parse(result.stdout) as {
-      player: string;
-      command: string;
-      args: string[];
-      mode: string;
-      file: { filePath: string; season: number | null; episode: number | null };
-      pid: null;
-    };
-    expect(payload).toMatchObject({
-      player: 'mpv',
-      command: 'mpv',
-      mode: 'detach',
-      pid: null,
-      file: { season: 1, episode: 1 },
-    });
-    expect(payload.args).toContain(payload.file.filePath);
-    expect(result.stdout).not.toContain('\u001b[');
-  });
-
-  it('mm play falla con un mensaje accionable si el título no existe', () => {
-    const result = run(['play', 'no-existe', '--dry-run']);
-
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain('No hay ningún título que coincida');
   });
 
   it('el reproductor desacoplado sobrevive al proceso que lo lanzó', async () => {

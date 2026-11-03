@@ -135,6 +135,11 @@ export function createLaunchPlan(options: CreateLaunchPlanOptions): LaunchPlan {
     }
   }
 
+  // Lanzar el reproductor maximizado (sin pasar a pantalla completa).
+  if (playerName === 'mpv') {
+    finalArgsResolved = [...finalArgsResolved, '--window-maximized'];
+  }
+
   return {
     player: playerName,
     command: definition.command,

@@ -125,7 +125,7 @@ function AppImpl({
     } catch {
       return { all: 0, 'in-progress': 0, favorites: 0, series: 0, movie: 0, unknown: 0 };
     }
-  }, [library]);
+  }, [library, dataVersion]);
 
   useEffect(() => {
     setSelected(0);

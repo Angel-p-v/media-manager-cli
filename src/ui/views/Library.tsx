@@ -2,7 +2,7 @@ import { Box } from 'ink';
 import React from 'react';
 
 import { MediaDetails } from '../components/MediaDetails.js';
-import { MediaList } from '../components/MediaList.js';
+import { MediaList, calculateWindowSize } from '../components/MediaList.js';
 import { Sidebar } from '../components/Sidebar.js';
 
 import type { MediaRow } from '../../core/db/types.js';
@@ -41,6 +41,13 @@ export function LibraryView({
   selectedIds,
   _onToggleSelection,
 }: LibraryViewProps): React.JSX.Element {
+  const rows = process.stdout.rows ?? 24;
+  const listWindowSize = calculateWindowSize({
+    rows,
+    compact: compact ?? false,
+    showDetails,
+  });
+
   return (
     <Box flexGrow={1} flexDirection="row">
       <Sidebar section={section} counts={counts} />
@@ -52,6 +59,7 @@ export function LibraryView({
           compact={compact}
           selectedIds={selectedIds}
           _onToggleSelection={_onToggleSelection}
+          windowSize={listWindowSize}
         />
         {showDetails ? (
           <MediaDetails
