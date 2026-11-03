@@ -352,6 +352,41 @@ export function SettingsView({
     setStatus('Edición cancelada.');
   }, [selectedItem]);
 
+  /** Elimina la raíz de biblioteca seleccionada y persiste el cambio. */
+  const removeSelectedRoot = useCallback((): void => {
+    const item = selectedItem;
+    if (!item) return;
+    // Solo se pueden borrar raíces existentes, no la opción de añadir.
+    if (!item.id.startsWith('library-root-') || item.id === 'library-root-add') return;
+
+    const index = Number(item.id.split('-').pop());
+    if (Number.isNaN(index) || index < 0 || index >= config.library.roots.length) return;
+
+    const effectiveConfigPath = configPath ?? resolveConfigPath();
+    if (!effectiveConfigPath) {
+      setStatus('No se puede guardar: no hay ruta de configuración.');
+      return;
+    }
+
+    const nextConfig: AppConfig = { ...config };
+    nextConfig.library = {
+      ...nextConfig.library,
+      roots: nextConfig.library.roots.filter((_root, i) => i !== index),
+    };
+
+    void saveConfig(nextConfig, effectiveConfigPath)
+      .then(() => {
+        setStatus('Raíz eliminada.');
+        setSelectedIndex(
+          Math.max(0, Math.min(selectedIndex, Math.max(0, nextConfig.library.roots.length - 1))),
+        );
+        void Promise.resolve(onSave?.());
+      })
+      .catch(() => {
+        setStatus('No se pudo eliminar la raíz.');
+      });
+  }, [selectedItem, selectedIndex, config, configPath, onSave]);
+
   /**
    * Maneja el teclado dentro de la vista de ajustes.
    * Cuando se está editando, captura caracteres para construir el nuevo valor.
@@ -441,6 +476,15 @@ export function SettingsView({
       startEdit();
       return;
     }
+    // Borrar la raíz de biblioteca seleccionada con ⌫ / Delete.
+    if (
+      selectedItem?.id.startsWith('library-root-') &&
+      selectedItem.id !== 'library-root-add' &&
+      (key.backspace || key.delete)
+    ) {
+      removeSelectedRoot();
+      return;
+    }
     // Tab vuelve a la biblioteca.
     if (key.tab) {
       onBack?.();
@@ -456,7 +500,7 @@ export function SettingsView({
         {theme.muted(
           isEditing && selectedItem?.kind === 'select'
             ? '←→ cambia · Enter guarda · Escape cancela/volver · q sale'
-            : '↑↓ navegan · Enter edita · Escape cancela/volver · q sale',
+            : `↑↓ navegan · Enter edita · Escape cancela/volver${config.library.roots.length > 0 ? ' · ⌫ borra raíz' : ''} · q sale`,
         )}
       </Text>
       <Text> </Text>
