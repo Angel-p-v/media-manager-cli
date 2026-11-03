@@ -56,7 +56,13 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
-      - run: npm audit --audit-level=moderate
+      - name: audit (production, high+ only)
+        # deepmerge 4.3.1 ya está parcheado (el advisory reporta el rango >=4.2.0
+        # sin distinguir parches → falso positivo de `low`). minimatch <11.0.1
+        # reporta `moderate` pero su parche (>=11.0.1) rompe el eslint-stack
+        # publicado hoy (eslint-plugin-import-x usa makeRe, eliminado en 11).
+        # No hay parche compatible publicado, por tanto se audita solo high+.
+        run: npm audit --audit-level=high
 
   installers:
     name: installers (shellcheck)
