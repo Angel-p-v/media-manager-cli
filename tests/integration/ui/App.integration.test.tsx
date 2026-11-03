@@ -239,6 +239,26 @@ describe('App (TUI)', () => {
     expect(frame).toContain('Severance');
     expect(frame).toContain('Ficheros');
     expect(frame).toContain('[q]');
+    // Los conteos de cada sección deben mostrarse en el sidebar.
+    expect(frame).toContain('(5)'); // Todo: 5 títulos
+    expect(frame).toContain('(3)'); // Series: 3
+    expect(frame).toContain('(2)'); // Películas: 2
+    unmount();
+  });
+
+  it('actualiza los conteos del sidebar al reindexar (dataVersion)', () => {
+    const { lastFrame, rerender, unmount } = render(
+      <App config={config} library={fakeLibrary()} />,
+    );
+    let frame = frameOf(lastFrame);
+    expect(frame).toContain('(5)'); // 5 títulos en total
+
+    // Re-render con menos títulos (simula reindexar tras quitar una raíz).
+    rerender(<App config={config} library={fakeLibrary(defaultRows.slice(0, 2))} />);
+    frame = frameOf(lastFrame);
+    expect(frame).toContain('(2)'); // Ahora 2 títulos en total
+    expect(frame).not.toContain('(5)');
+
     unmount();
   });
 
