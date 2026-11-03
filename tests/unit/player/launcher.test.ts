@@ -172,6 +172,38 @@ describe('createLaunchPlan', () => {
     ]);
   });
 
+  it('lanzar mpv maximizado añade --window-maximized', () => {
+    const mpvConfig: PlayerConfig = {
+      ...playerConfig,
+      default: 'mpv',
+      players: {
+        ...playerConfig.players,
+        mpv: { command: 'mpv', args: ['{file}'] },
+      },
+    };
+
+    const plan = createLaunchPlan({ playerConfig: mpvConfig, filePath: '/media/video.mkv' });
+
+    expect(plan.args).toEqual(['/media/video.mkv', '--window-maximized']);
+    expect(plan.player).toBe('mpv');
+  });
+
+  it('lanzar vlc no añade --window-maximized', () => {
+    const vlcConfig: PlayerConfig = {
+      ...playerConfig,
+      default: 'vlc',
+      players: {
+        ...playerConfig.players,
+        vlc: { command: 'vlc', args: ['{file}'] },
+      },
+    };
+
+    const plan = createLaunchPlan({ playerConfig: vlcConfig, filePath: '/media/video.mkv' });
+
+    expect(plan.args).toEqual(['/media/video.mkv']);
+    expect(plan.player).toBe('vlc');
+  });
+
   it('combina startSeconds y subtitlePath', () => {
     const withStart: PlayerConfig = {
       ...playerConfig,
