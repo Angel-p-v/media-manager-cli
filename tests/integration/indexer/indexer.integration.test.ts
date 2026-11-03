@@ -1,4 +1,4 @@
-import { cp, mkdtemp, rm, unlink, utimes } from 'node:fs/promises';
+import { cp, mkdtemp, rm, unlink, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -122,6 +122,35 @@ describe('indexLibrary (integración)', () => {
     const { mediaRepo, fileRepo } = repo();
     expect(mediaRepo.count()).toBe(5);
     expect(fileRepo.count()).toBe(8);
+  });
+
+  it('no indexa archivos que no son de vídeo (imagen, texto, audio) aunque compartan carpeta', async () => {
+    // Añade archivos no-vídeo dentro de una carpeta que ya tiene películas.
+    const moviesDir = path.join(libraryDir, 'movies');
+    await writeFile(path.join(moviesDir, 'portada.jpg'), 'imagen-falsa');
+    await writeFile(path.join(moviesDir, 'sinopsis.txt'), 'texto-falso');
+    await writeFile(path.join(moviesDir, 'banda-sonora.mp3'), 'audio-falso');
+
+    const stats = await indexLibrary(repo(), library());
+
+    // Los 3 archivos no-vídeo no se cuentan ni se indexan: solo los 8 de vídeo.
+    expect(stats).toMatchObject({
+      filesSeen: 8,
+      filesAdded: 8,
+      filesUnchanged: 0,
+      filesRemoved: 0,
+      mediaAdded: 5,
+      mediaRemoved: 0,
+      skipped: 0,
+    });
+
+    const { mediaRepo, fileRepo } = repo();
+    expect(mediaRepo.count()).toBe(5);
+    expect(fileRepo.count()).toBe(8);
+    // Ningún título apunta a los archivos no-vídeo.
+    expect(fileRepo.listAllPaths ? fileRepo.listAllPaths() : []).not.toContain(
+      path.join(moviesDir, 'portada.jpg'),
+    );
   });
 
   it('reindexa un fichero cuando cambia su fecha de modificación', async () => {
