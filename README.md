@@ -52,8 +52,6 @@ sh installers/linux/install.sh
 mm
 
 # 3. Desde la CLI
-mm search "cowboy bebop"
-mm play "cowboy bebop" --resume   # reanuda donde lo dejaste
 mm index                          # re-escanea tu biblioteca
 ```
 
@@ -69,8 +67,6 @@ Windows y macOS: véase [Instalación rápida](#instalación-rápida).
 
 ```bash
 mm                       # abre la interfaz (TUI) con tu biblioteca
-mm search "cowboy bebop" # busca por título desde la terminal, al instante
-mm play "cowboy bebop"   # lanza el episodio en tu reproductor favorito
 mm index                 # re-escanea tus carpetas y actualiza el índice
 ```
 
@@ -193,7 +189,7 @@ Además del binario `mm` (que ya incluye Node.js embalado en las distribuciones 
 | **vlc**          | Reproductor alternativo                                 | ❌ (una de mpv/vlc) | `sudo apt install vlc` / `winget install videolan.vlc` / `brew install --cask vlc` |
 | **Node.js ≥ 22** | Solo si clonás el repo y corrés desde fuente (`npm ci`) | ⚠️ Solo modo fuente | [`nodejs.org`](https://nodejs.org/) o tu gestor de versión                         |
 
-> 💡 Ninguna de estas dependencias es estrictamente obligatoria para usar la TUI o buscar: si no tenés reproductor, `mm play` te avisará.
+> 💡 Ninguna de estas dependencias es estrictamente obligatoria para usar la TUI o buscar.
 
 ### Ver qué falta en tu sistema
 
@@ -238,43 +234,17 @@ El instalador intenta hacerlo automáticamente, pero en algunos casos macOS lo r
 # 🖥️ Interfaz visual (TUI)
 mm
 
-# 🔍 Buscar y reproducir
-mm search "cowboy bebop"
-mm play "cowboy bebop" --resume    # reanuda donde lo dejaste
-mm play "cowboy bebop" --next      # siguiente episodio no visto
-mm play "akira" --dry-run          # muestra el comando sin lanzar
-
 # 📋 Gestión de biblioteca
 mm index                           # escanea y actualiza
-mm list --in-progress              # títulos en curso
-mm continue                        # lista lo que estás viendo
-mm history                         # historial de reproducción
 
-# ✅ Gestión de estado
-mm mark "cowboy bebop" --watched       # marca como visto
-mm mark "cowboy bebop" --position 120  # guarda posición exacta
-mm favorite "cowboy bebop"             # ⭐ favorito
+# ✅ Diagnóstico
 mm doctor                              # diagnóstico biblioteca
 mm doctor --prune-missing              # limpia entradas rotas
-
-# 👀 Modo vigilancia
-mm watch                           # reindexa automáticamente al detectar cambios
-
-# 🏷️ Etiquetas y colecciones
-mm tag list                        # lista todas las etiquetas
-mm tag add 1 "por-ver"             # asigna etiqueta al título #1
-mm tag remove 1 "por-ver"          # quita etiqueta del título #1
-mm list --tag 1                    # filtra por etiqueta (repetible para AND)
 
 # 🔄 Auto-actualización
 mm self-update --check             # comprueba si hay actualización
 mm self-update                     # descarga e instala la nueva versión
 mm self-update --dry-run           # muestra qué se haría sin instalar
-
-# 🎞️ Metadatos externos (TVMaze)
-mm metadata search "cowboy bebop"  # busca en TVMaze
-mm metadata fetch 12345            # obtiene y guarda metadatos por ID
-mm metadata clear                  # limpia metadatos de un título
 ```
 
 ---
@@ -475,7 +445,7 @@ flowchart TD
     P --> Q[["Tracker IPC mpv<br/>guarda posición cada 5 s (socket / named pipe)"]]
     Q --> L
 
-    R[["Indexación automática<br/>mm index / mm watch (chokidar)"]] --> S[["Scanner + Clasificador<br/>src/core/indexer/"]]
+    R[["Indexación<br/>mm index"]] --> S[["Scanner + Clasificador<br/>src/core/indexer/"]]
     S --> T[["Parsers de nombre<br/>S01E02 · 1x02 · T1E2 · 1080p BluRay…"]]
     T --> M
 
