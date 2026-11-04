@@ -445,11 +445,23 @@ else
     cp "${EXTRACT_DIR}/package.json" "${APP_DIR}/package.json" || die 1 "no se pudo copiar package.json"
   fi
 
-  # Crear script de entrada mm
+  # El bundle standalone ya trae su propio binario de Node (raiz del paquete).
+  # Si existe, lo copiamos para que el CLI funcione sin Node en el sistema.
+  if [ -f "${EXTRACT_DIR}/node" ] && [ -x "${EXTRACT_DIR}/node" ]; then
+    cp "${EXTRACT_DIR}/node" "${APP_DIR}/node" || die 1 "no se pudo copiar el runtime de Node incluido"
+    chmod 755 "${APP_DIR}/node"
+  fi
+
+  # Crear script de entrada mm. Usa el Node incluido si esta disponible, si no
+  # el de PATH del sistema (modo repo y releases anteriores sin runtime).
   cat > "${APP_DIR}/mm" <<'SCRIPT'
 #!/bin/sh
 DIR="$(cd "$(dirname "$0")" && pwd)"
-exec node "${DIR}/dist/cli.js" "$@"
+if [ -x "$DIR/node" ]; then
+  exec "$DIR/node" "${DIR}/dist/cli.js" "$@"
+else
+  exec node "${DIR}/dist/cli.js" "$@"
+fi
 SCRIPT
   chmod 755 "${APP_DIR}/mm"
 

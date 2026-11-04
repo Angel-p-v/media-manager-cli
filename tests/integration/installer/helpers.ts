@@ -58,7 +58,10 @@ export function createArtifact(options: ArtifactOptions): Artifact {
   mkdirSync(path.join(bundle, 'dist'), { recursive: true });
   mkdirSync(path.join(bundle, 'config'), { recursive: true });
   writeFileSync(path.join(bundle, 'mm'), `#!/bin/sh\nprintf '%s\\n' '${version}'\n`);
-  writeFileSync(path.join(bundle, 'node'), '#!/bin/sh\nexit 0\n');
+  // El runtime de Node incluido debe delegar en el node del sistema para que el
+  // instalador real (que prefiere el runtime empaquetado cuando exista) funcione
+  // también en los tests de integración.
+  writeFileSync(path.join(bundle, 'node'), '#!/bin/sh\nexec node "$@"\n');
   writeFileSync(
     path.join(bundle, 'dist', 'cli.js'),
     `#!/usr/bin/env node\nconsole.log('${version}');\n`,
