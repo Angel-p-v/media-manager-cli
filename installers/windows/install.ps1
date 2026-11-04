@@ -21,6 +21,7 @@ $PREFIX_EXPLICIT = $false
 $BINDIR = ""
 $FORCE = $false
 $DRY_RUN = $false
+$VERSION = ""
 
 function usage() {
     @"
@@ -123,6 +124,10 @@ while ($i -lt $argsCopy.Count) {
 }
 if ($argsCopy.Count -gt $i) { die 2 "argumentos inesperados: $($argsCopy[$i..($argsCopy.Count-1)])" }
 
+# --version solo se acepta en modo release (se lee del install.json del paquete).
+# En modo fuente (sin --version) no se usa.
+if ($VERSION -and -not ($VERSION -match '^[0-9]+\.[0-9]+\.[0-9]+$')) { die 2 "--version debe ser x.y.z" }
+
 if (([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) -and -not $PREFIX_EXPLICIT) {
     die 2 "no ejecutes como administrador; si es necesario, pasa --prefix explícito"
 }
@@ -209,18 +214,40 @@ Copy-Item -Path "${CLONE_DIR}/dist" -Destination "${APP_DIR}/dist" -Recurse -For
 Copy-Item -Path "${CLONE_DIR}/node_modules" -Destination "${APP_DIR}/node_modules" -Recurse -Force
 Copy-Item -Path "${CLONE_DIR}/package.json" -Destination "${APP_DIR}/package.json" -Force
 
-# Crear script de entrada mm.bat que ejecute el CLI compilado
+# install.json (manifiesto de instalación: versión, plataforma, rutas)
+$installedVersion = if ($VERSION) { $VERSION.TrimStart('v') } else { (node -e "console.log(require('${CLONE_DIR}/package.json').version)") }
+$installJson = @{
+    schemaVersion = 1
+    name = $APP_NAME
+    version = $installedVersion
+    platform = "windows-x64"
+    prefix = $PREFIX
+    appDir = $APP_DIR
+    binary = $BINARY
+    installMode = "source"
+} | ConvertTo-Json -Depth 5
+Set-Content -Path "${APP_DIR}/install.json" -Value $installJson -Encoding utf8
+
+# Enlace 'current' que apunta a la versión instalada (uninstall.ps1 lo requiere)
+$CURRENT_LINK = Join-Path $APP_DIR "current"
+if (Test-Path $CURRENT_LINK) { Remove-Item $CURRENT_LINK -Recurse -Force }
+New-Item -ItemType SymbolicLink -Path $CURRENT_LINK -Target $APP_DIR -Force | Out-Null
+
+# Crear script de entrada mm.bat que ejecute el CLI compilado (con marcador del instalador)
 $entryScript = @"
 @echo off
+REM managed by media-manager-cli installer
 DIR=%~dp0
 node "%DIR%\dist\cli.js" %*
 "@
 Set-Content -Path "${APP_DIR}/mm.bat" -Value $entryScript -Encoding utf8
 
 step "creando $BINARY"
+# El wrapper apunta al mm.bat real dentro de APP_DIR (con marcador del instalador).
 $wrapper = @"
 @echo off
-call "%HOMEPATH%\.local\share\media-manager-cli\mm.bat" %*
+REM managed by media-manager-cli installer
+call "${APP_DIR}\mm.bat" %*
 "@
 Set-Content -Path $BINARY -Value $wrapper -Encoding utf8
 
