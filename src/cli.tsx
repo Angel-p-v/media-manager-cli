@@ -30,23 +30,23 @@ import { runTui, defaultLogFile } from './ui/run.js';
 
 const program = new Command()
   .name('mm')
-  .description('Media Manager — gestor de contenido multimedia para terminal (series y películas)')
-  .version(getVersion(), '-V, --version', 'muestra la versión')
-  .option('-v, --verbose', 'activa logs de depuración y pilas de error')
-  .option('--log-file <ruta>', 'escribe los logs en un archivo con rotación automática (10 MB)')
+  .description('Media Manager — terminal multimedia content manager (series and movies)')
+  .version(getVersion(), '-V, --version', 'shows the version')
+  .option('-v, --verbose', 'enables debug logs and error stacks')
+  .option('--log-file <path>', 'writes logs to a file with automatic rotation (10 MB)')
   .showHelpAfterError()
   .addHelpText(
     'before',
-    '\nÍndice de comandos:\n  list / show   explorar la biblioteca\n  index         mantener la biblioteca actualizada\n  doctor        diagnóstico\n  config        ajustes\n  db / self-update / completion  utilidades avanzadas\n',
+    '\nCommand index:\n  list / show   browse the library\n  index         keep the library up to date\n  doctor        diagnosis\n  config        settings\n  db / self-update / completion  advanced utilities\n',
   )
   .addHelpText(
     'after',
-    '\nEjemplos de uso:\n  mm                              abre la interfaz interactiva (TUI)\n  mm list                         lista todos los títulos indexados\n  mm show 1                       muestra el detalle del título #1\n  mm index                        indexa la biblioteca completa\n  mm doctor                       diagnostica y repara la biblioteca\n  mm completion bash              genera script de autocompletado para bash\n\nCódigos de salida:\n  0  éxito\n  1  error de ejecución\n  2  uso incorrecto\n',
+    '\nUsage examples:\n  mm                              opens the interactive interface (TUI)\n  mm list                         lists all indexed titles\n  mm show 1                       shows the detail of title #1\n  mm index                        indexes the entire library\n  mm doctor                       diagnoses and repairs the library\n  mm completion bash              generates autocomplete script for bash\n\nExit codes:\n  0  success\n  1  execution error\n  2  incorrect usage\n',
   )
   .exitOverride();
 
-// Commander conserva las opciones globales en el programa; se copian al subcomando
-// para que todos los `run*Command(options)` reciban el mismo `verbose` y `logFile`.
+// Commander keeps global options in the program; they are copied to the subcommand
+// so that all `run*Command(options)` receive the same `verbose` and `logFile`.
 program.hook('preAction', (thisCommand, actionCommand) => {
   const opts = thisCommand.opts();
   if (opts.verbose === true) {
@@ -59,51 +59,51 @@ program.hook('preAction', (thisCommand, actionCommand) => {
 
 program
   .command('config')
-  .description('muestra y edita la configuración efectiva')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('--path', 'muestra solo la ruta del archivo de configuración')
-  .option('--validate', 'valida el archivo de configuración y termina')
-  .option('--json', 'salida en formato JSON')
-  .option('--init', 'crea el archivo de configuración por defecto si no existe')
-  .option('--set <clave=valor>', 'establece una clave anidada, p. ej. player.default=vlc')
+  .description('shows and edits the effective configuration')
+  .option('-c, --config <path>', 'configuration file to use')
+  .option('--path', 'shows only the configuration file path')
+  .option('--validate', 'validates the configuration file and exits')
+  .option('--json', 'JSON output')
+  .option('--init', 'creates the default configuration file if it does not exist')
+  .option('--set <key=value>', 'sets a nested key, e.g. player.default=vlc')
   .action(runConfigCommand);
 
 program
   .command('index')
-  .description('indexa la biblioteca (escanea carpetas y añade títulos a la BD)')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('--dry-run', 'simula la indexación sin escribir en la base de datos')
-  .option('--root <ruta>', 'indexa solo la raíz indicada')
-  .option('--folder <ruta>', 'indexa solo la carpeta indicada dentro de la raíz')
-  .option('--json', 'salida en formato JSON')
+  .description('indexes the library (scans folders and adds titles to the DB)')
+  .option('-c, --config <path>', 'configuration file to use')
+  .option('--dry-run', 'simulates indexing without writing to the database')
+  .option('--root <path>', 'indexes only the indicated root')
+  .option('--folder <path>', 'indexes only the indicated folder within the root')
+  .option('--json', 'JSON output')
   .action(runIndexCommand);
 
 program
   .command('list')
-  .description('enumera los títulos de la biblioteca con filtros y paginación')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('-t, --type <tipo>', 'filtra por tipo (series, movie)', parseMediaType)
-  .option('--sort <orden>', 'ordena por title, added o recent', parseSortOrder)
-  .option('--limit <n>', 'número máximo de resultados', parsePositiveInteger)
-  .option('--offset <n>', 'resultados a saltar', parseNonNegativeInteger)
-  .option('--json', 'salida en formato JSON')
-  .option('--export <formato>', 'exporta a archivo: json o csv')
+  .description('lists library titles with filters and pagination')
+  .option('-c, --config <path>', 'configuration file to use')
+  .option('-t, --type <type>', 'filters by type (series, movie)', parseMediaType)
+  .option('--sort <order>', 'orders by title, added or recent', parseSortOrder)
+  .option('--limit <n>', 'maximum number of results', parsePositiveInteger)
+  .option('--offset <n>', 'results to skip', parseNonNegativeInteger)
+  .option('--json', 'JSON output')
+  .option('--export <format>', 'exports to file: json or csv')
   .action(runListCommand);
 
 program
   .command('show')
-  .description('muestra el detalle completo de un título (metadatos y ficheros)')
-  .argument('<id-o-titulo>', 'id numérico o título a consultar')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('--json', 'salida en formato JSON')
+  .description('shows the complete detail of a title (metadata and files)')
+  .argument('<id-or-title>', 'numeric ID or title to query')
+  .option('-c, --config <path>', 'configuration file to use')
+  .option('--json', 'JSON output')
   .action(runShowCommand);
 
 program
-  .command('playlist <titulos...>')
-  .description('reproduce varios títulos en secuencia (playlist)')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('--dry-run', 'muestra qué se reproduciría sin lanzar nada')
-  .option('--json', 'salida en formato JSON')
+  .command('playlist <titles...>')
+  .description('plays multiple titles in sequence (playlist)')
+  .option('-c, --config <path>', 'configuration file to use')
+  .option('--dry-run', 'shows what would be played without launching anything')
+  .option('--json', 'JSON output')
   .action((rawOptions: Record<string, unknown>, titles: string[]) => {
     const options = {
       ...rawOptions,
@@ -114,25 +114,25 @@ program
 
 program
   .command('doctor')
-  .description('diagnóstico y reparación de la biblioteca (índice y metadatos)')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('--json', 'salida en formato JSON')
-  .option('--full-hash', 'hash completo para confirmar duplicados')
-  .option('--prune-missing', 'elimina del índice los ficheros ausentes')
-  .option('-y, --yes', 'no pide confirmación para --prune-missing')
+  .description('diagnosis and repair of the library (index and metadata)')
+  .option('-c, --config <path>', 'configuration file to use')
+  .option('--json', 'JSON output')
+  .option('--full-hash', 'full hash to confirm duplicates')
+  .option('--prune-missing', 'removes missing files from the index')
+  .option('-y, --yes', 'does not ask for confirmation for --prune-missing')
   .action(runDoctorCommand);
 
 program
   .command('self-update')
-  .description('busca e instala actualizaciones desde GitHub Releases')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('--check', 'solo comprueba si hay actualización disponible')
-  .option('--dry-run', 'muestra qué se descargaría sin instalar')
+  .description('searches and installs updates from GitHub Releases')
+  .option('-c, --config <path>', 'configuration file to use')
+  .option('--check', 'only checks if an update is available')
+  .option('--dry-run', 'shows what would be downloaded without installing')
   .action(runSelfUpdateCommand);
 
 program
   .command('completion <shell>')
-  .description('genera script de autocompletado para shell (bash, zsh, fish)')
+  .description('generates shell autocomplete script (bash, zsh, fish)')
   .action((shell: string) => {
     try {
       console.log(generateCompletion(shell));
@@ -142,41 +142,41 @@ program
     }
   });
 
-const dbCommand = program.command('db').description('operaciones sobre la base de datos local');
+const dbCommand = program.command('db').description('operations on the local database');
 
 dbCommand
   .command('stats')
-  .description('muestra el tamaño y el contenido del índice')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('--json', 'salida en formato JSON')
+  .description('shows the size and content of the index')
+  .option('-c, --config <path>', 'configuration file to use')
+  .option('--json', 'JSON output')
   .action(runDbStatsCommand);
 
 dbCommand
   .command('optimize')
-  .description('actualiza estadísticas y compacta la base de datos')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('--vacuum', 'compacta el fichero (puede tardar)')
-  .option('--json', 'salida en formato JSON')
+  .description('updates statistics and compacts the database')
+  .option('-c, --config <path>', 'configuration file to use')
+  .option('--vacuum', 'compacts the file (may take a while)')
+  .option('--json', 'JSON output')
   .action(runDbOptimizeCommand);
 
 dbCommand
   .command('backup')
-  .description('crea una copia de seguridad de la base de datos')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('--label <etiqueta>', 'etiqueta para identificar el backup', 'manual')
-  .option('--json', 'salida en formato JSON')
+  .description('creates a backup of the database')
+  .option('-c, --config <path>', 'configuration file to use')
+  .option('--label <label>', 'label to identify the backup', 'manual')
+  .option('--json', 'JSON output')
   .action(runDbBackupCommand);
 
 dbCommand
   .command('restore')
-  .description('restaura la base de datos desde un fichero de backup')
-  .option('-c, --config <ruta>', 'archivo de configuración a usar')
-  .option('--from <ruta>', 'ruta al fichero de backup a restaurar', '')
-  .option('--json', 'salida en formato JSON')
+  .description('restores the database from a backup file')
+  .option('-c, --config <path>', 'configuration file to use')
+  .option('--from <path>', 'path to the backup file to restore', '')
+  .option('--json', 'JSON output')
   .action(runDbRestoreCommand);
 
 async function main(): Promise<void> {
-  // Sin subcomando se abre la interfaz interactiva; con subcomando, la CLI headless.
+  // Without a subcommand, the interactive interface opens; with a subcommand, the headless CLI.
   const rawArgs = process.argv.slice(2);
   const verbose = rawArgs.includes('--verbose') || rawArgs.includes('-v');
   const logFile = verbose ? defaultLogFile() : undefined;
@@ -195,8 +195,8 @@ async function main(): Promise<void> {
   try {
     await program.parseAsync(process.argv);
   } catch (error) {
-    // Commander ya ha impreso la ayuda, la versión o el error de uso. Solo `help`
-    // y `--version` salen con 0; el resto son errores de uso (2).
+    // Commander has already printed the help, version, or usage error. Only `help`
+    // and `--version` exit with 0; the rest are usage errors (2).
     if (error instanceof CommanderError) {
       process.exitCode = error.exitCode === 0 ? 0 : 2;
       return;

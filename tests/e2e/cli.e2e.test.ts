@@ -81,14 +81,14 @@ describe('mm (e2e, binario compilado)', () => {
     expect(result.stdout.trim()).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
-  it('la ayuda enumera los subcomandos disponibles', () => {
+  it('help lists the available subcommands', () => {
     const result = run(['--help']);
 
     expect(result.status).toBe(0);
     for (const command of ['index', 'list', 'show', 'db', 'config']) {
       expect(result.stdout).toContain(command);
     }
-    expect(result.stdout).toContain('Códigos de salida');
+    expect(result.stdout).toContain('Exit codes');
   });
 
   it('el subcomando help también termina con código 0', () => {
