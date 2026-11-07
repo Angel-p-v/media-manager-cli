@@ -6,6 +6,13 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 versionado [SemVer](https://semver.org/lang/es/). A partir de `v1.0.0`, release-please
 mantiene este archivo a partir de los commits convencionales.
 
+## [3.4.1](https://github.com/Angel-p-v/media-manager-cli/compare/v3.4.0...v3.4.1) (2026-11-07)
+
+
+### Bug Fixes
+
+* **cli:** instaladores funcionan sin Node en el sistema ([#308](https://github.com/Angel-p-v/media-manager-cli/issues/308)) ([735b7c5](https://github.com/Angel-p-v/media-manager-cli/commit/735b7c57baa04c03c3e78b7ec0f8ee3150f3e093))
+
 ## [3.4.0](https://github.com/Angel-p-v/media-manager-cli/compare/v3.3.0...v3.4.0) (2026-11-03)
 
 
