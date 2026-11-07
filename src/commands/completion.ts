@@ -1,10 +1,10 @@
-/** Genera scripts de autocompletado de shell para mm. */
+/** Generates shell autocomplete scripts for mm. */
 
 import { ValidationError } from '../shared/errors.js';
 
 export type CompletionShell = 'bash' | 'zsh' | 'fish';
 
-/** Genera el script de autocompletado para Bash. */
+/** Generates the autocomplete script for Bash. */
 function generateBashCompletion(): string {
   return [
     '# media-manager shell completion for Bash',
@@ -21,7 +21,7 @@ function generateBashCompletion(): string {
     '      return 0',
     '      ;;',
     '    index|search|show|play|mark|favorite|tag|doctor|db|watch|config|metadata|completion)',
-    '      # No hay subcomandos adicionales por ahora',
+    '      # No additional subcommands for now',
     '      COMPREPLY=()',
     '      return 0',
     '      ;;',
@@ -36,7 +36,7 @@ function generateBashCompletion(): string {
   ].join('\n');
 }
 
-/** Genera el script de autocompletado para Zsh. */
+/** Generates the autocomplete script for Zsh. */
 function generateZshCompletion(): string {
   return [
     '#compdef mm',
@@ -46,55 +46,55 @@ function generateZshCompletion(): string {
     '_mm() {',
     '  local -a commands',
     '  commands=(',
-    "    'index:indexar la biblioteca'",
-    "    'list:enumar los títulos de la biblioteca'",
-    "    'search:buscar títulos'",
-    "    'show:mostrar detalle de un título'",
-    "    'play:reproducir un título'",
-    "    'mark:marcar estado visto/no visto'",
-    "    'favorite:marcar como favorito'",
-    "    'tag:gestionar etiquetas'",
-    "    'doctor:diagnóstico de la biblioteca'",
-    "    'db:operaciones de base de datos'",
-    "    'watch:vigilar cambios en la biblioteca'",
-    "    'config:mostrar configuración'",
-    "    'metadata:gestionar metadatos externos'",
-    "    'self-update:auto-actualizar'",
-    "    'completion:generar script de autocompletado'",
-    "    'help:mostrar ayuda'",
+    "    'index:index the library'",
+    "    'list:list library titles'",
+    "    'search:search titles'",
+    "    'show:show title detail'",
+    "    'play:play a title'",
+    "    'mark:mark watched/unwatched status'",
+    "    'favorite:mark as favorite'",
+    "    'tag:manage tags'",
+    "    'doctor:library diagnosis'",
+    "    'db:database operations'",
+    "    'watch:watch for library changes'",
+    "    'config:show configuration'",
+    "    'metadata:manage external metadata'",
+    "    'self-update:auto-update'",
+    "    'completion:generate autocomplete script'",
+    "    'help:show help'",
     '  )',
     '',
     '  _arguments -s \\',
-    "    '(-h --help)'{-h,--help}[muestra la ayuda] \\",
-    "    '(-V --version)'{-V,--version}[muestra la versión] \\",
+    "    '(-h --help)'{-h,--help}[shows help] \\",
+    "    '(-V --version)'{-V,--version}[shows version] \\",
     "    '*: :_mm_commands'",
     '}',
     '',
-    '# Definir comandos para completion',
+    '# Define commands for completion',
     '_mm_commands() {',
-    "  _values 'comando' \\",
-    "    'index[indexar la biblioteca]' \\",
-    "    'list[enumar los títulos de la biblioteca]' \\",
-    "    'search[buscar títulos]' \\",
-    "    'show[mostrar detalle de un título]' \\",
-    "    'play[reproducir un título]' \\",
-    "    'mark[marcar estado visto/no visto]' \\",
-    "    'favorite[marcar como favorito]' \\",
-    "    'tag[gestionar etiquetas]' \\",
-    "    'doctor[diagnóstico de la biblioteca]' \\",
-    "    'db[operaciones de base de datos]' \\",
-    "    'watch[vigilar cambios en la biblioteca]' \\",
-    "    'config[mostrar configuración]' \\",
-    "    'metadata[gestionar metadatos externos]' \\",
-    "    'self-update[auto-actualizar]' \\",
-    "    'completion[generar script de autocompletado]' \\",
-    "    'help[mostrar ayuda]'",
+    "  _values 'command' \\",
+    "    'index[index the library]' \\",
+    "    'list[list library titles]' \\",
+    "    'search[search titles]' \\",
+    "    'show[show title detail]' \\",
+    "    'play[play a title]' \\",
+    "    'mark[mark watched/unwatched status]' \\",
+    "    'favorite[mark as favorite]' \\",
+    "    'tag[manage tags]' \\",
+    "    'doctor[library diagnosis]' \\",
+    "    'db[database operations]' \\",
+    "    'watch[watch for library changes]' \\",
+    "    'config[show configuration]' \\",
+    "    'metadata[manage external metadata]' \\",
+    "    'self-update[auto-update]' \\",
+    "    'completion[generate autocomplete script]' \\",
+    "    'help[show help]'",
     '}',
     '',
   ].join('\n');
 }
 
-/** Genera el script de autocompletado para Fish. */
+/** Generates the autocomplete script for Fish. */
 function generateFishCompletion(): string {
   return [
     '# media-manager shell completion for Fish',
@@ -109,32 +109,32 @@ function generateFishCompletion(): string {
     '  test (count $cmd) -eq 1',
     'end',
     '',
-    "complete -c mm -f -a 'index' -d 'indexar la biblioteca'",
-    "complete -c mm -f -a 'list' -d 'enumar los títulos de la biblioteca'",
-    "complete -c mm -f -a 'search' -d 'buscar títulos'",
-    "complete -c mm -f -a 'show' -d 'mostrar detalle de un título'",
-    "complete -c mm -f -a 'play' -d 'reproducir un título'",
-    "complete -c mm -f -a 'mark' -d 'marcar estado visto/no visto'",
-    "complete -c mm -f -a 'favorite' -d 'marcar como favorito'",
-    "complete -c mm -f -a 'tag' -d 'gestionar etiquetas'",
-    "complete -c mm -f -a 'doctor' -d 'diagnóstico de la biblioteca'",
-    "complete -c mm -f -a 'db' -d 'operaciones de base de datos'",
-    "complete -c mm -f -a 'watch' -d 'vigilar cambios en la biblioteca'",
-    "complete -c mm -f -a 'config' -d 'mostrar configuración'",
-    "complete -c mm -f -a 'metadata' -d 'gestionar metadatos externos'",
-    "complete -c mm -f -a 'self-update' -d 'auto-actualizar'",
-    "complete -c mm -f -a 'completion' -d 'generar script de autocompletado'",
-    "complete -c mm -f -a 'help' -d 'mostrar ayuda'",
+    "complete -c mm -f -a 'index' -d 'index the library'",
+    "complete -c mm -f -a 'list' -d 'list library titles'",
+    "complete -c mm -f -a 'search' -d 'search titles'",
+    "complete -c mm -f -a 'show' -d 'show title detail'",
+    "complete -c mm -f -a 'play' -d 'play a title'",
+    "complete -c mm -f -a 'mark' -d 'mark watched/unwatched status'",
+    "complete -c mm -f -a 'favorite' -d 'mark as favorite'",
+    "complete -c mm -f -a 'tag' -d 'manage tags'",
+    "complete -c mm -f -a 'doctor' -d 'library diagnosis'",
+    "complete -c mm -f -a 'db' -d 'database operations'",
+    "complete -c mm -f -a 'watch' -d 'watch for library changes'",
+    "complete -c mm -f -a 'config' -d 'show configuration'",
+    "complete -c mm -f -a 'metadata' -d 'manage external metadata'",
+    "complete -c mm -f -a 'self-update' -d 'auto-update'",
+    "complete -c mm -f -a 'completion' -d 'generate autocomplete script'",
+    "complete -c mm -f -a 'help' -d 'show help'",
     '',
   ].join('\n');
 }
 
 /**
- * Genera el script de autocompletado para la shell especificada.
+ * Generates the autocomplete script for the specified shell.
  *
- * @param shell - nombre de la shell ('bash', 'zsh', 'fish')
- * @returns el script de autocompletado como cadena
- * @throws Error si la shell no es soportada
+ * @param shell - shell name ('bash', 'zsh', 'fish')
+ * @returns the autocomplete script as a string
+ * @throws Error if the shell is not supported
  */
 export function generateCompletion(shell: string): string {
   switch (shell) {
@@ -146,10 +146,10 @@ export function generateCompletion(shell: string): string {
       return generateFishCompletion();
     default:
       throw new ValidationError(
-        'Shell no soportada: ' + String(shell) + '. Usa "bash", "zsh" o "fish".',
+        'Unsupported shell: ' + String(shell) + '. Use "bash", "zsh" or "fish".',
       );
   }
 }
 
-/** Lista de shells soportadas. */
+/** List of supported shells. */
 export const supportedShells: CompletionShell[] = ['bash', 'zsh', 'fish'];
