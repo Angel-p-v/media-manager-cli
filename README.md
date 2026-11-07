@@ -5,9 +5,9 @@
 <h1 align="center">media-manager</h1>
 
 <p align="center">
-  <strong>Gestor de contenido multimedia 100 % terminal</strong><br/>
-  Indexa tu colección de series y películas en una base de datos SQLite local<br/>
-  y lánzala directamente en <code>mpv</code> o <code>vlc</code> sin salir de la terminal.
+  <strong>100% terminal multimedia content manager</strong><br/>
+  Index your series and movie collection in a local SQLite database<br/>
+  and launch it directly in <code>mpv</code> or <code>vlc</code> without leaving the terminal.
 </p>
 
 <p align="center">
@@ -33,115 +33,115 @@
 ## 🎬 Demo
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Angel-p-v/media-manager/main/docs/assets/demo.svg" alt="Demo de media-manager: indexar, buscar, ver el detalle y preparar la reproducción" width="800"/>
+  <img src="https://raw.githubusercontent.com/Angel-p-v/media-manager/main/docs/assets/demo.svg" alt="Demo of media-manager: index, search, view details, and prepare playback" width="800"/>
 </p>
 
-> **La demo es una transcripción estática de una sesión real.** Para probarla en tu terminal, empieza por la sección de [instalación rápida](#instalación-rápida).
+> **The demo is a static transcription of a real session.** To try it in your terminal, start with the [quick install](#quick-install) section.
 
 ---
 
-## ⚡ Comenzando en 30 segundos
+## ⚡ Get started in 30 seconds
 
 ```bash
-# 1. Clona e instala (Linux, sin sudo)
+# 1. Clone and install (Linux, without sudo)
 git clone https://github.com/Angel-p-v/media-manager.git
 cd media-manager
 sh installers/linux/install.sh
 
-# 2. Abrir la interfaz
+# 2. Open the interface
 mm
 
-# 3. Desde la CLI
-mm index                          # re-escanea tu biblioteca
+# 3. From the CLI
+mm index                          # re-scans your library
 ```
 
-Windows y macOS: véase [Instalación rápida](#instalación-rápida).
+Windows and macOS: see [Quick install](#quick-install).
 
 ---
 
-## 🎯 ¿Qué es media-manager?
+## 🎯 What is media-manager?
 
-`media-manager` (CLI: `mm`) es una aplicación de línea de comandos **100% terminal** para organizar y consumir una biblioteca multimedia personal que ya vive en tu disco.
+`media-manager` (CLI: `mm`) is a **100% terminal** command-line application to organize and consume a personal multimedia library that already lives on your disk.
 
-> **La idea es sencilla:** tus vídeos ya están ordenados en carpetas; el trabajo de la aplicación es **entender** esa estructura, guardarla en un índice rápido y ponerte a ver algo en dos pulsaciones.
+> **The idea is simple:** your videos are already organized in folders; the app's job is to **understand** that structure, store it in a fast index, and let you start watching something in two taps.
 
 ```bash
-mm                       # abre la interfaz (TUI) con tu biblioteca
-mm index                 # re-escanea tus carpetas y actualiza el índice
+mm                       # opens the interface (TUI) with your library
+mm index                 # re-scans your folders and updates the index
 ```
 
 ---
 
-## ✨ ¿Por qué media-manager?
+## ✨ Why media-manager?
 
-| 🎯 **Centralizar el acceso**       | Una sola entrada (`mm`) a toda tu colección, sin depender del explorador de archivos ni de la web del servidor de streaming.                                 |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| ⚡ **Indexer local, instantáneo**  | Un índice SQLite con FTS5 convierte "buscar entre 10 000 ficheros" en "buscar entre 10 000 filas" con búsqueda full-text.                                    |
-| 🎮 **Reproducir, no retransmitir** | El vídeo se abre en tu reproductor local (`mpv`, `vlc`) con el hardware y la calidad que ya tienes; la app solo orquesta el proceso.                         |
-| ⚙️ **Configurable de verdad**      | Rutas, exclusiones, reproductores, tema y atajos de teclado viven en un `config.yaml` externo, validado estrictamente al arrancar.                           |
-| 🔧 **Componible**                  | Todo lo que hace la TUI se puede hacer también por línea de comandos y en formato `--json`, para integrarlo con scripts, hooks o cualquier otra herramienta. |
+| 🎯 **Centralize access**      | A single entry point (`mm`) to your entire collection, without depending on the file explorer or the streaming server's website.            |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| ⚡ **Local, instant indexer** | A SQLite index with FTS5 turns "searching among 10,000 files" into "searching among 10,000 rows" with full-text search.                     |
+| 🎮 **Play, don't stream**     | The video opens in your local player (`mpv`, `vlc`) with the hardware and quality you already have; the app only orchestrates the process.  |
+| ⚙️ **Truly configurable**     | Paths, exclusions, players, theme, and keyboard shortcuts live in an external `config.yaml`, strictly validated at startup.                 |
+| 🔧 **Composable**             | Everything the TUI does can also be done from the command line and in `--json` format, to integrate with scripts, hooks, or any other tool. |
 
 ---
 
-## ✨ Características principales
+## ✨ Main features
 
-| Capacidad                                                          | Estado |
-| ------------------------------------------------------------------ | ------ |
-| 🖥️ TUI navegable (Ink + React)                                     | ✅     |
-| 🗃️ Índice local en SQLite con FTS5                                 | ✅     |
-| 🔄 Indexación recursiva + incremental                              | ✅     |
-| 🎯 Parseo inteligente (`S01E02`, `1x02`, `T1E2`, `1080p BluRay`)   | ✅     |
-| 🔍 Búsqueda instantánea (CLI + TUI)                                | ✅     |
-| 🎮 Reproducción con `mpv` / `vlc`                                  | ✅     |
-| ⚙️ Configuración YAML validada con Zod                             | ✅     |
-| 👀 Modo _watch_ (reindexado automático)                            | ✅     |
-| 📤 Salida `--json` para scripts                                    | ✅     |
-| 📝 Logs estructurados, `--verbose`, errores con código             | ✅     |
-| 🗄️ Mantenimiento SQLite (`optimize` / `VACUUM`)                    | ✅     |
-| ✅ Instalador verificado, checksums, distribución portable         | ✅     |
-| ▶️ Estado de reproducción (continuar, historial, marcas)           | ✅     |
-| 📡 Tracker IPC mpv (reanudación automática y guardado de posición) | ✅     |
-| 🎮 Comandos `continue`, `history`, `mark`, `favorite`, `doctor`    | ✅     |
-| 📃 Comando `playlist` (reproduce varios títulos en secuencia)      | ✅     |
-| 🗄️ Comandos `db stats`, `db optimize`, `db backup`, `db restore`   | ✅     |
-| 🏷️ Comandos `tag add/remove/list` y filtro `list --tag`            | ✅     |
-| 🔄 Auto-actualización con `self-update`                            | ✅     |
-| 📋 Sección "Continuar" en la TUI                                   | ✅     |
-| 🧩 Integración con reproductor (mpv/vlc, modo detach/foreground)   | ✅     |
-| 🧪 Tests E2E con IPC falso y `--dry-run`                           | ✅     |
-| 🎞️ Metadatos externos TVMaze (sinopsis, calificación)              | ✅     |
-| 🔄 Sincronización automática de metadatos con TTL                  | ✅     |
-| 🤖 Metadatos automáticos tipo Sonarr/Radarr (`autoFetch`)          | ✅     |
+| Capability                                                       | Status |
+| ---------------------------------------------------------------- | ------ |
+| 🖥️ Navigable TUI (Ink + React)                                   | ✅     |
+| 🗃️ Local index in SQLite with FTS5                               | ✅     |
+| 🔄 Recursive + incremental indexing                              | ✅     |
+| 🎯 Smart parsing (`S01E02`, `1x02`, `T1E2`, `1080p BluRay`)      | ✅     |
+| 🔍 Instant search (CLI + TUI)                                    | ✅     |
+| 🎮 Playback with `mpv` / `vlc`                                   | ✅     |
+| ⚙️ YAML config validated with Zod                                | ✅     |
+| 👀 _Watch_ mode (automatic reindexing)                           | ✅     |
+| 📤 `--json` output for scripts                                   | ✅     |
+| 📝 Structured logs, `--verbose`, errors with code                | ✅     |
+| 🗄️ SQLite maintenance (`optimize` / `VACUUM`)                    | ✅     |
+| ✅ Verified installer, checksums, portable distribution          | ✅     |
+| ▶️ Playback state (continue, history, marks)                     | ✅     |
+| 📡 mpv IPC tracker (automatic resume and position saving)        | ✅     |
+| 🎮 Commands `continue`, `history`, `mark`, `favorite`, `doctor`  | ✅     |
+| 📃 `playlist` command (plays multiple titles in sequence)        | ✅     |
+| 🗄️ Commands `db stats`, `db optimize`, `db backup`, `db restore` | ✅     |
+| 🏷️ Commands `tag add/remove/list` and filter `list --tag`        | ✅     |
+| 🔄 Auto-update with `self-update`                                | ✅     |
+| 📋 "Continue" section in the TUI                                 | ✅     |
+| 🧩 Player integration (mpv/vlc, detach/foreground mode)          | ✅     |
+| 🧪 E2E tests with fake IPC and `--dry-run`                       | ✅     |
+| 🎞️ External TVMaze metadata (synopsis, rating)                   | ✅     |
+| 🔄 Automatic metadata sync with TTL                              | ✅     |
+| 🤖 Sonarr/Radarr-style automatic metadata (`autoFetch`)          | ✅     |
 
-## 🚀 Instalación rápida
+## 🚀 Quick install
 
-### 📦 Instalador oficial (recomendado — Linux, Windows)
+### 📦 Official installer (recommended — Linux, Windows)
 
-Clona el repositorio y ejecuta el instalador correspondiente para tu sistema.
+Clone the repository and run the installer corresponding to your system.
 
 #### Linux (x64, arm64)
 
 ```bash
-# 1. Clona el repositorio
+# 1. Clone the repository
 git clone https://github.com/Angel-p-v/media-manager.git
 cd media-manager
 
-# 2. Instala dependencias de Node (requerido para modo repositorio)
+# 2. Install Node.js dependencies (required for repository mode)
 npm ci
 
-# 3. Ejecuta el instalador (sin sudo, instala en ~/.local)
+# 3. Run the installer (without sudo, installs in ~/.local)
 sh installers/linux/install.sh
 
-# Si ya está instalado, usa --force para reinstalar:
+# If already installed, use --force to reinstall:
 # sh installers/linux/install.sh --force
 
-# 4. Verifica
+# 4. Verify
 mm --version
 ```
 
-> 💡 Asegúrate de que `~/.local/bin` esté en tu PATH **antes** de otros gestores de versión (como `mise`, `nvm`, etc.) para que `mm` se resuelva correctamente.
+> 💡 Make sure `~/.local/bin` is in your PATH **before** other version managers (such as `mise`, `nvm`, etc.) so that `mm` resolves correctly.
 
-> 📦 Alternativa: si no quieres clonar el repositorio, descarga el instalador directamente y obtendrá un release precompilado de GitHub Releases (no requiere node ni npm):
+> 📦 Alternative: if you don't want to clone the repository, download the installer directly and it will obtain a precompiled release from GitHub Releases (no node or npm required):
 >
 > ```bash
 > curl -fsSL https://raw.githubusercontent.com/Angel-p-v/media-manager/main/installers/linux/install.sh -o /tmp/mm-install.sh
@@ -151,154 +151,154 @@ mm --version
 #### Windows (x64)
 
 ```powershell
-# 1. Clona el repositorio
+# 1. Clone the repository
 git clone https://github.com/Angel-p-v/media-manager.git
 cd media-manager
 
-# 2. Ejecuta el instalador
+# 2. Run the installer
 .\installers\windows\install.ps1
 
-# 3. Verifica
+# 3. Verify
 mm --version
 ```
 
 #### macOS (x64, arm64)
 
-> **Nota:** No hay assets oficiales de macOS en las releases públicas (pendiente de runners de GitHub Actions con macOS). Consulta [`installers/macos/README.md`](./installers/macos/README.md) para compilar e instalar en macOS.
+> **Note:** There are no official macOS assets in public releases (pending GitHub Actions runners with macOS). See [`installers/macos/README.md`](./installers/macos/README.md) to compile and install on macOS.
 
-Para compilar en macOS:
+To compile on macOS:
 
 ```bash
 npm run standalone -- --node-source official
 ```
 
-> **Opciones útiles:**
+> **Useful options:**
 >
 > ```bash
 > sh installers/linux/install.sh --prefix "$HOME/.local"
-> sh installers/linux/install.sh --dry-run            # muestra los cambios sin aplicarlos
+> sh installers/linux/install.sh --dry-run            # shows changes without applying them
 > ```
 
-## 🔧 Dependencias del sistema
+## 🔧 System dependencies
 
-Además del binario `mm` (que ya incluye Node.js embalado en las distribuciones oficiales), media-manager necesita algunos programas del sistema para funcionar al 100 %:
+Besides the `mm` binary (which already includes Node.js bundled in official distributions), media-manager needs some system programs to work at 100%:
 
-| Dependencia      | Para qué sirve                                          | Obligatoria         | Instalación                                                                        |
-| ---------------- | ------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------- |
-| **mpv**          | Reproductor principal (recomendado)                     | ❌ (una de mpv/vlc) | `sudo apt install mpv` / `winget install mpv` / `brew install mpv`                 |
-| **vlc**          | Reproductor alternativo                                 | ❌ (una de mpv/vlc) | `sudo apt install vlc` / `winget install videolan.vlc` / `brew install --cask vlc` |
-| **Node.js ≥ 22** | Solo si clonás el repo y corrés desde fuente (`npm ci`) | ⚠️ Solo modo fuente | [`nodejs.org`](https://nodejs.org/) o tu gestor de versión                         |
+| Dependency       | Purpose                                                   | Mandatory           | Installation                                                                       |
+| ---------------- | --------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------- |
+| **mpv**          | Main player (recommended)                                 | ❌ (mpv or vlc)     | `sudo apt install mpv` / `winget install mpv` / `brew install mpv`                 |
+| **vlc**          | Alternative player                                        | ❌ (mpv or vlc)     | `sudo apt install vlc` / `winget install videolan.vlc` / `brew install --cask vlc` |
+| **Node.js ≥ 22** | Only if you clone the repo and run from source (`npm ci`) | ⚠️ Source mode only | [`nodejs.org`](https://nodejs.org/) or your version manager                        |
 
-> 💡 Ninguna de estas dependencias es estrictamente obligatoria para usar la TUI o buscar.
+> 💡 None of these dependencies is strictly required to use the TUI or search.
 
-### Ver qué falta en tu sistema
+### Check what's missing on your system
 
 ```bash
 mm doctor
 ```
 
-`mm doctor` te dice qué reproductores, herramientas y entradas del índice están disponibles o faltan, y puede limpiar entradas rotas con `--prune-missing`.
+`mm doctor` tells you which players, tools, and index entries are available or missing, and can clean up broken entries with `--prune-missing`.
 
 ---
 
-## 🗑️ Desinstalar
+## 🗑️ Uninstall
 
 ```bash
-# Clona el repositorio si aún no lo tienes
+# Clone the repository if you don't have it yet
 git clone https://github.com/Angel-p-v/media-manager.git
 cd media-manager
 
-# Ejecuta el desinstalador (sin sudo)
-sh installers/linux/uninstall.sh            # conserva configuración y base de datos
-sh installers/linux/uninstall.sh --purge    # las elimina también
+# Run the uninstaller (without sudo)
+sh installers/linux/uninstall.sh            # preserves configuration and database
+sh installers/linux/uninstall.sh --purge    # removes them too
 ```
 
-> 🛡️ La biblioteca multimedia nunca se toca.
+> 🛡️ The multimedia library is never touched.
 
-#### macOS: si Gatekeeper bloquea el binario
+#### macOS: if Gatekeeper blocks the binary
 
-Si al ejecutar `mm` ves un error de "app no verificada" o "no se puede abrir porque no es de un desarrollador identificado":
+If when running `mm` you see an "app not verified" or "cannot be opened because it is not from an identified developer" error:
 
 ```bash
-# Quita el atributo de cuarentena de los binarios instalados
+# Remove the quarantine attribute from installed binaries
 xattr -d com.apple.quarantine ~/.local/share/media-manager/dist/cli.js ~/.local/bin/mm
 ```
 
-El instalador intenta hacerlo automáticamente, pero en algunos casos macOS lo reaplica.
+The installer tries to do this automatically, but in some cases macOS re-applies it.
 
 ---
 
-## 🚀 Uso rápido
+## 🚀 Quick usage
 
 ```bash
-# 🖥️ Interfaz visual (TUI)
+# 🖥️ Visual interface (TUI)
 mm
 
-# 📋 Gestión de biblioteca
-mm index                           # escanea y actualiza
+# 📋 Library management
+mm index                           # scans and updates
 
-# ✅ Diagnóstico
-mm doctor                              # diagnóstico biblioteca
-mm doctor --prune-missing              # limpia entradas rotas
+# ✅ Diagnosis
+mm doctor                              # library diagnosis
+mm doctor --prune-missing              # cleans up broken entries
 
-# 🔄 Auto-actualización
-mm self-update --check             # comprueba si hay actualización
-mm self-update                     # descarga e instala la nueva versión
-mm self-update --dry-run           # muestra qué se haría sin instalar
+# 🔄 Auto-update
+mm self-update --check             # checks for updates
+mm self-update                     # downloads and installs the new version
+mm self-update --dry-run           # shows what would be done without installing
 ```
 
 ---
 
-## ⌨️ Atajos en la TUI
+## ⌨️ TUI shortcuts
 
-| Tecla          | Acción                                                      |
-| -------------- | ----------------------------------------------------------- |
-| `q` / `Ctrl+C` | Salir                                                       |
-| `Tab`          | Siguiente sección (Todo, Continuar, Series, Películas)      |
-| `↑` `↓`        | Mover selección                                             |
-| `/`            | Buscar • `Esc` vuelve                                       |
-| `p`            | ▶️ Reproducir                                               |
-| `w`            | Marcar visto / no visto                                     |
-| `f`            | ⭐ Favorito / quitar favorito                               |
-| `m`            | 📋 Mostrar/ocultar panel de detalles                        |
-| `r`            | 🔄 Obtener metadatos del título seleccionado                |
-| `n`            | ▶️ Siguiente episodio                                       |
-| `g`            | 🔄 Ciclo filtros (todos / en curso / no vistos / favoritos) |
-| `s`            | ⚙️ Configuración                                            |
-| `?`            | ❓ Ayuda                                                    |
-| `k`            | ⌨️ Reasignar atajos de teclado (desde la TUI)               |
+| Key            | Action                                                       |
+| -------------- | ------------------------------------------------------------ |
+| `q` / `Ctrl+C` | Exit                                                         |
+| `Tab`          | Next section (All, Continue, Series, Movies)                 |
+| `↑` `↓`        | Move selection                                               |
+| `/`            | Search • `Esc` goes back                                     |
+| `p`            | ▶️ Play                                                      |
+| `w`            | Mark watched / unwatched                                     |
+| `f`            | ⭐ Favorite / remove favorite                                |
+| `m`            | 📋 Show/hide details panel                                   |
+| `r`            | 🔄 Fetch metadata for selected title                         |
+| `n`            | ▶️ Next episode                                              |
+| `g`            | 🔄 Cycle filters (all / in progress / unwatched / favorites) |
+| `s`            | ⚙️ Settings                                                  |
+| `?`            | ❓ Help                                                      |
+| `k`            | ⌨️ Reassign keyboard shortcuts (from the TUI)                |
 
 ---
 
-## 🐚 Autocompletado de shell
+## 🐚 Shell autocomplete
 
-`mm` puede generar scripts de autocompletado para Bash, Zsh y Fish:
+`mm` can generate autocomplete scripts for Bash, Zsh, and Fish:
 
 ```bash
-# Generar el script
-mm completion bash   # o: zsh | fish
+# Generate the script
+mm completion bash   # or: zsh | fish
 
-# Instalar (ejemplos para Bash)
+# Install (examples for Bash)
 mm completion bash > /etc/bash_completion.d/mm
-# o para usuario:
+# or for user:
 mm completion bash >> ~/.bashrc
 
 # Zsh
 mm completion zsh > /usr/local/share/zsh/site-functions/_mm
-# o para usuario:
+# or for user:
 mm completion zsh >> ~/.zshrc
 
 # Fish
 mm completion fish > ~/.config/fish/completions/mm.fish
 ```
 
-Después de instalar, reinicia la shell o recarga su configuración para que los comandos y opciones de `mm` se autocompleten al presionar <kbd>Tab</kbd>.
+After installing, restart the shell or reload its configuration for `mm` commands and options to autocomplete when pressing <kbd>Tab</kbd>.
 
 ---
 
-## ⚙️ Configuración
+## ⚙️ Configuration
 
-Archivo: `~/.config/media-manager/config.yaml` (respeta `XDG_CONFIG_HOME`)
+File: `~/.config/media-manager/config.yaml` (respects `XDG_CONFIG_HOME`)
 
 ```yaml
 version: 1
@@ -308,9 +308,9 @@ library:
     - path: ~/Media/Series
       type: series
       label: Series
-    - path: ~/Media/Peliculas
+    - path: ~/Media/Movies
       type: movie
-      label: Películas
+      label: Movies
   exclude:
     - '**/*.sample.*'
     - '**/sample/**'
@@ -332,12 +332,12 @@ player:
       command: vlc
       args: ['--started-from-file', '--start-time={start}', '{file}']
 
-playback: # 🎬 Estado de reproducción
-  tracking: auto # auto | manual | off (solo mpv)
-  resume: true # reanudar por defecto
-  resumeMinSeconds: 30 # mínimo para reanudar
-  completedThreshold: 0.9 # 90% = completado
-  completedTailSeconds: 30 # últimos 30s = completado
+playback: # 🎬 Playback state
+  tracking: auto # auto | manual | off (mpv only)
+  resume: true # resume by default
+  resumeMinSeconds: 30 # minimum to resume
+  completedThreshold: 0.9 # 90% = completed
+  completedTailSeconds: 30 # last 30s = completed
 
 ui:
   theme: default
@@ -349,8 +349,8 @@ logging:
   format: text
 
 metadata:
-  cacheTtlHours: 24 # horas antes de refrescar metadatos
-  autoFetch: false # true = obtener metadatos al abrir la TUI
+  cacheTtlHours: 24 # hours before refreshing metadata
+  autoFetch: false # true = fetch metadata when opening TUI
 
 keybindings:
   quit: q
@@ -360,99 +360,99 @@ keybindings:
   nextSection: tab
 ```
 
-### 🤖 Metadatos automáticos (tipo Sonarr/Radarr)
+### 🤖 Automatic metadata (Sonarr/Radarr-style)
 
-Si activas `metadata.autoFetch: true`, al abrir la TUI se buscarán automáticamente los metadatos de **todos los títulos que no los tienen aún**, usando proveedores públicos gratuitos (TVMaze para series y películas), sin que tengas que pulsar `r` en cada uno individualmente.
+If you enable `metadata.autoFetch: true`, when opening the TUI metadata will be automatically searched for **all titles that don't have it yet**, using free public providers (TVMaze for series and movies), without having to press `r` on each one individually.
 
 ```yaml
 metadata:
   autoFetch: true
 ```
 
-El proceso respeta el rate limiting de cada proveedor y procesa los títulos en lotes para no bloquear la aplicación. Al finalizar, verás un resumen en la barra de estado con cuántos metadatos se obtuvieron y cuántos fallaron.
+The process respects each provider's rate limiting and processes titles in batches to avoid blocking the application. At the end, you'll see a summary in the status bar with how many metadata items were obtained and how many failed.
 
-> **💡 Por defecto** `autoFetch` está desactivado (`false`) para no hacer llamadas API inesperadas.
+> **💡 By default** `autoFetch` is disabled (`false`) to avoid unexpected API calls.
 
-> **⌨️ Tecla `r`**: si prefieres obtener metadatos título por título manualmente, pulsa `r` sobre cualquier título seleccionado en la biblioteca.
+> **⌨️ Key `r`**: if you prefer to fetch metadata title by title manually, press `r` on any selected title in the library.
 
-> **💡 Placeholder `{start}`**: si la plantilla lo incluye y hay posición de reanudación, se sustituye por los segundos; si no hay reanudación, se elimina el argumento completo.
+> **💡 `{start}` placeholder**: if the template includes it and there is a resume position, it is replaced with seconds; if there is no resume, the entire argument is removed.
 
-### Variables de entorno
+### Environment variables
 
-| Variable           | Efecto                             |
-| ------------------ | ---------------------------------- |
-| `MM_CONFIG`        | Ruta alternativa del YAML          |
-| `MM_DATABASE_PATH` | Ruta alternativa de la base SQLite |
-| `MM_PLAYER`        | Reproductor por defecto            |
-| `MM_LOG_LEVEL`     | Nivel logging (`silent`…`debug`)   |
-| `MM_LOG_FORMAT`    | Formato (`text` o `json`)          |
-| `NO_COLOR`         | Desactiva colores                  |
+| Variable           | Effect                           |
+| ------------------ | -------------------------------- |
+| `MM_CONFIG`        | Alternative YAML path            |
+| `MM_DATABASE_PATH` | Alternative SQLite path          |
+| `MM_PLAYER`        | Default player                   |
+| `MM_LOG_LEVEL`     | Logging level (`silent`…`debug`) |
+| `MM_LOG_FORMAT`    | Format (`text` or `json`)        |
+| `NO_COLOR`         | Disables colors                  |
 
 ---
 
-## 🏗️ Arquitectura
+## 🏗️ Architecture
 
-Principio rector: **la lógica de negocio no sabe que existe una terminal.**
+Guiding principle: **business logic doesn't know a terminal exists.**
 
 ```
 src/
-├─ cli.tsx        # punto de entrada; delega en commands/ o en la TUI
-├─ commands/      # subcomandos headless (no dependen de Ink)
-├─ core/          # dominio puro: config, db, indexer, library, player
-├─ ui/            # presentación con Ink (React) — solo consume core/
-└─ shared/        # utilidades transversales: errores, logger, rutas
+├─ cli.tsx        # entry point; delegates to commands/ or the TUI
+├─ commands/      # headless subcommands (don't depend on Ink)
+├─ core/          # pure domain: config, db, indexer, library, player
+├─ ui/            # presentation with Ink (React) — only consumes core/
+└─ shared/        # cross-cutting utilities: errors, logger, paths
 ```
 
-**Reglas verificadas en CI:**
+**Rules verified in CI:**
 
-- `core/` **nunca** importa desde `ui/`
-- `ui/` y `commands/` usan casos de uso, no SQL directo
-- Acceso a datos por repositorios con `Database` inyectada
+- `core/` **never** imports from `ui/`
+- `ui/` and `commands/` use use cases, not direct SQL
+- Data access via repositories with injected `Database`
 
 ---
 
-## 📊 Diagrama de flujos
+## 📊 Flow diagram
 
 ```mermaid
 flowchart TD
-    A[["Usuario ejecuta mm"]] --> B{"TUI o CLI"}
+    A[["User runs mm"]] --> B{"TUI or CLI"}
 
-    B -->|TUI| C[["Interfaz TUI<br/>Ink + React"]]
-    B -->|CLI| D[["CLI headless<br/>Commander"]]
+    B -->|TUI| C[["TUI Interface<br/>Ink + React"]]
+    B -->|CLI| D[["Headless CLI<br/>Commander"]]
 
-    C --> E[["Hooks de biblioteca<br/>useLibrary / useMediaDetails"]]
-    D --> F[["Subcomandos<br/>index, search, show, list, play, tag, metadata, doctor, watch, self-update"]]
+    C --> E[["Library hooks<br/>useLibrary / useMediaDetails"]]
+    D --> F[["Subcommands<br/>index, search, show, list, play, tag, metadata, doctor, watch, self-update"]]
 
-    E --> G[["Servicio de biblioteca<br/>LibraryService"]]
+    E --> G[["Library service<br/>LibraryService"]]
     F --> G
 
-    G --> H{"Operación"}
+    G --> H{"Operation"}
 
-    H -->|Listar / Buscar / Mostrar| I[["Repositorio de medios<br/>mediaRepo (SQLite + FTS5)"]]
-    H -->|Reproducir| J[["Lanzador de reproductor<br/>mpv / vlc (spawn sin shell)"]]
-    H -->|Etiquetas| K[["Repositorio de etiquetas<br/>tagRepo"]]
-    H -->|Estado reproducción| L[["Repositorio de reproducción<br/>playbackRepo / preferencesRepo"]]
-    H -->|Metadatos externos| N[["MetadataService<br/>TVMaze"]]
-    H -->|Diagnóstico / Mantenimiento| O[["doctor / db stats / db optimize / backup / restore"]]
+    H -->|List / Search / Show| I[["Media repository<br/>mediaRepo (SQLite + FTS5)"]]
+    H -->|Play| J[["Player launcher<br/>mpv / vlc (spawn without shell)"]]
+    H -->|Tags| K[["Tag repository<br/>tagRepo"]]
+    H -->|Playback state| L[["Playback repository<br/>playbackRepo / preferencesRepo"]]
+    H -->|External metadata| N[["MetadataService<br/>TVMaze"]]
+    H -->|Diagnosis / Maintenance| O[["doctor / db stats / db optimize / backup / restore"]]
 
-    I --> M[["Base de datos SQLite<br/>WAL + FTS5 + media_metadata + tags"]]
-    J --> P[["Proceso reproductor<br/>mpv o vlc, detached por defecto"]]
+    I --> M[["SQLite database<br/>WAL + FTS5 + media_metadata + tags"]]
+    J --> P[["Player process<br/>mpv or vlc, detached by default"]]
     K --> M
     L --> M
     N --> M
     O --> M
 
-    P --> Q[["Tracker IPC mpv<br/>guarda posición cada 5 s (socket / named pipe)"]]
+    P --> Q[["mpv IPC tracker<br/>saves position every 5 s (socket / named pipe)"]]
     Q --> L
 
-    R[["Indexación<br/>mm index"]] --> S[["Scanner + Clasificador<br/>src/core/indexer/"]]
-    S --> T[["Parsers de nombre<br/>S01E02 · 1x02 · T1E2 · 1080p BluRay…"]]
+    R[["Indexing<br/>mm index"]] --> S[["Scanner + Classifier<br/>src/core/indexer/"]]
+    S --> T[["Name parsers<br/>S01E02 · 1x02 · T1E2 · 1080p BluRay…"]]
     T --> M
 
-    N --> U[["API externas públicas<br/>TVMaze (series y películas)"]]
+    N --> U[["Public external APIs<br/>TVMaze (series and movies)"]]
     U --> N
 
-    V[["Auto-actualización<br/>mm self-update"]] --> W[["GitHub Releases API<br/>descarga + SHA-256 + reemplazo atómico"]]
+    V[["Auto-update<br/>mm self-update"]] --> W[["GitHub Releases API<br/>download + SHA-256 + atomic replacement"]]
 
     style A fill:#f9f,stroke:#333
     style M fill:#bbf,stroke:#333
@@ -465,57 +465,57 @@ flowchart TD
 
 ---
 
-## 🛠️ Desarrollo
+## 🛠️ Development
 
 ```bash
-npm install          # instala dependencias (prepara hooks Husky)
-npm run dev          # CLI en modo watch
-npm run verify       # lint + formato + tipos + tests (gate local)
-npm test             # suite completa (635 tests)
-npm run test:unit    # solo unitarias
+npm install          # installs dependencies (prepares Husky hooks)
+npm run dev          # CLI in watch mode
+npm run verify       # lint + format + types + tests (local gate)
+npm test             # full suite (635 tests)
+npm run test:unit    # unit tests only
 npm run test:integration
 npm run test:e2e
-npm run coverage     # informe de cobertura
+npm run coverage     # coverage report
 npm run bench        # benchmarks
-npm run smoke        # npm pack → instalación limpia → smoke test
-npm run standalone   # distribución portable con Node incluido
+npm run smoke        # npm pack → clean install → smoke test
+npm run standalone   # portable distribution with Node included
 ```
 
-### Calidad y CI
+### Quality and CI
 
-| Herramienta             | Configuración                         |
-| ----------------------- | ------------------------------------- |
-| **ESLint 10**           | type-aware + `typescript-eslint`      |
-| **Prettier 3**          | formato consistente                   |
-| **Vitest 5**            | 3 proyectos: unit / integration / e2e |
-| **Husky + lint-staged** | formato + lint en pre-commit          |
-| **commitlint**          | Conventional Commits                  |
-| **CI (GitHub Actions)** | Node 22/24/26 + smoke test real       |
-
----
-
-## 📚 Documentación
-
-| Documento                                                      | Descripción                      |
-| -------------------------------------------------------------- | -------------------------------- |
-| [`PLAN.md`](./PLAN.md)                                         | Plan de desarrollo por hitos     |
-| [`docs/README.md`](./docs/README.md)                           | Índice de documentación          |
-| [`docs/guides/architecture.md`](./docs/guides/architecture.md) | Decisiones técnicas              |
-| [`docs/guides/performance.md`](./docs/guides/performance.md)   | Presupuesto y benchmarks         |
-| [`docs/guides/release.md`](./docs/guides/release.md)           | Publicación, tags y credenciales |
-| [`docs/adr/`](./docs/adr)                                      | Architecture Decision Records    |
-| [`docs/plans/`](./docs/plans)                                  | Planes de trabajo                |
-| [`CHANGELOG.md`](./CHANGELOG.md)                               | Historial de versiones           |
-| [`SECURITY.md`](./SECURITY.md)                                 | Reportar vulnerabilidades        |
-| [`CONTRIBUTING.md`](./CONTRIBUTING.md)                         | Flujo de desarrollo y PRs        |
+| Tool                    | Configuration                        |
+| ----------------------- | ------------------------------------ |
+| **ESLint 10**           | type-aware + `typescript-eslint`     |
+| **Prettier 3**          | consistent formatting                |
+| **Vitest 5**            | 3 projects: unit / integration / e2e |
+| **Husky + lint-staged** | format + lint in pre-commit          |
+| **commitlint**          | Conventional Commits                 |
+| **CI (GitHub Actions)** | Node 22/24/26 + real smoke test      |
 
 ---
 
-## 📄 Licencia
+## 📚 Documentation
+
+| Document                                                       | Description                       |
+| -------------------------------------------------------------- | --------------------------------- |
+| [`PLAN.md`](./PLAN.md)                                         | Development plan by milestones    |
+| [`docs/README.md`](./docs/README.md)                           | Documentation index               |
+| [`docs/guides/architecture.md`](./docs/guides/architecture.md) | Technical decisions               |
+| [`docs/guides/performance.md`](./docs/guides/performance.md)   | Budget and benchmarks             |
+| [`docs/guides/release.md`](./docs/guides/release.md)           | Publishing, tags, and credentials |
+| [`docs/adr/`](./docs/adr)                                      | Architecture Decision Records     |
+| [`docs/plans/`](./docs/plans)                                  | Work plans                        |
+| [`CHANGELOG.md`](./CHANGELOG.md)                               | Version history                   |
+| [`SECURITY.md`](./SECURITY.md)                                 | Report vulnerabilities            |
+| [`CONTRIBUTING.md`](./CONTRIBUTING.md)                         | Development flow and PRs          |
+
+---
+
+## 📄 License
 
 [MIT](./LICENSE) © 2026 media-manager contributors
 
 <p align="center">
-  <sub>Hecho con ❤️ para quienes prefieren la terminal.</sub><br/>
-  <sub><a href="https://github.com/Angel-p-v/media-manager/issues">Reportar bug</a> • <a href="https://github.com/Angel-p-v/media-manager/discussions">Preguntar</a> • <a href="https://github.com/Angel-p-v/media-manager/blob/main/CONTRIBUTING.md">Contribuir</a></sub>
+  <sub>Made with ❤️ for those who prefer the terminal.</sub><br/>
+  <sub><a href="https://github.com/Angel-p-v/media-manager/issues">Report bug</a> • <a href="https://github.com/Angel-p-v/media-manager/discussions">Ask</a> • <a href="https://github.com/Angel-p-v/media-manager/blob/main/CONTRIBUTING.md">Contribute</a></sub>
 </p>
