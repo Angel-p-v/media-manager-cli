@@ -23,11 +23,19 @@ export const UNINSTALL_SCRIPT = path.resolve(
   'uninstall.sh',
 );
 
+export type ArtifactLayout = 'standalone' | 'legacy';
+
 export type ArtifactOptions = {
   root: string;
   version?: string;
   platform?: string;
   bundleName?: string;
+  /**
+   * `standalone` reproduce el bundle real (`mm`, `node` y
+   * `node_modules/media-manager-cli/dist`); `legacy` reproduce los releases
+   * antiguos con `dist/` en la raíz.
+   */
+  layout?: ArtifactLayout;
 };
 
 export type Artifact = {
@@ -52,29 +60,37 @@ export function createArtifact(options: ArtifactOptions): Artifact {
   const version = options.version ?? '1.0.0';
   const platform = options.platform ?? `${process.platform}-${process.arch}`;
   const name = options.bundleName ?? `${APP_NAME}-${version}-${platform}`;
+  const layout = options.layout ?? 'standalone';
   const bundle = path.join(options.root, name);
 
-  mkdirSync(path.join(bundle, 'node_modules', APP_NAME, 'dist'), { recursive: true });
-  mkdirSync(path.join(bundle, 'dist'), { recursive: true });
   mkdirSync(path.join(bundle, 'config'), { recursive: true });
-  writeFileSync(path.join(bundle, 'mm'), `#!/bin/sh\nprintf '%s\\n' '${version}'\n`);
   // El runtime de Node incluido debe delegar en el node del sistema para que el
   // instalador real (que prefiere el runtime empaquetado cuando exista) funcione
   // también en los tests de integración.
   writeFileSync(path.join(bundle, 'node'), '#!/bin/sh\nexec node "$@"\n');
-  writeFileSync(
-    path.join(bundle, 'dist', 'cli.js'),
-    `#!/usr/bin/env node\nconsole.log('${version}');\n`,
-  );
-  writeFileSync(
-    path.join(bundle, 'node_modules', APP_NAME, 'dist', 'cli.js'),
-    `#!/usr/bin/env node\nconsole.log('${version}');\n`,
-  );
+
+  if (layout === 'standalone') {
+    // Layout real de los releases: lanzador propio y CLI dentro de node_modules.
+    mkdirSync(path.join(bundle, 'node_modules', APP_NAME, 'dist'), { recursive: true });
+    writeFileSync(path.join(bundle, 'mm'), `#!/bin/sh\nprintf '%s\\n' '${version}'\n`);
+    writeFileSync(
+      path.join(bundle, 'node_modules', APP_NAME, 'dist', 'cli.js'),
+      `#!/usr/bin/env node\nconsole.log('${version}');\n`,
+    );
+    chmodSync(path.join(bundle, 'mm'), 0o755);
+  } else {
+    // Layout antiguo: dist/ en la raíz y sin lanzador; lo crea el instalador.
+    mkdirSync(path.join(bundle, 'dist'), { recursive: true });
+    writeFileSync(
+      path.join(bundle, 'dist', 'cli.js'),
+      `#!/usr/bin/env node\nconsole.log('${version}');\n`,
+    );
+  }
+
   writeFileSync(
     path.join(bundle, 'install.json'),
     `${JSON.stringify({ schemaVersion: 1, name: APP_NAME, version, platform }, null, 2)}\n`,
   );
-  chmodSync(path.join(bundle, 'mm'), 0o755);
   chmodSync(path.join(bundle, 'node'), 0o755);
 
   const archive = path.join(options.root, `${name}.tar.gz`);
@@ -118,14 +134,22 @@ export function baseEnv(home: string): NodeJS.ProcessEnv {
     HOME: home,
     XDG_CONFIG_HOME: path.join(home, '.config'),
     XDG_DATA_HOME: path.join(home, '.local', 'share'),
+    XDG_CACHE_HOME: path.join(home, '.cache'),
+    XDG_STATE_HOME: path.join(home, '.local', 'state'),
     NO_COLOR: '1',
   };
 }
 
-export function runScript(script: string, args: string[], env: NodeJS.ProcessEnv): RunResult {
+export function runScript(
+  script: string,
+  args: string[],
+  env: NodeJS.ProcessEnv,
+  cwd?: string,
+): RunResult {
   const result = spawnSync('sh', [script, ...args], {
     encoding: 'utf8',
     env,
+    cwd,
     timeout: 15_000,
   });
   return {

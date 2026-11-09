@@ -126,8 +126,9 @@ Clone the repository and run the installer corresponding to your system.
 git clone https://github.com/Angel-p-v/media-manager.git
 cd media-manager
 
-# 2. Install Node.js dependencies (required for repository mode)
+# 2. Install dependencies and build (required for repository mode)
 npm ci
+npm run build
 
 # 3. Run the installer (without sudo, installs in ~/.local)
 sh installers/linux/install.sh
@@ -187,6 +188,7 @@ Besides the `mm` binary (which already includes Node.js bundled in official dist
 | ---------------- | --------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------- |
 | **mpv**          | Main player (recommended)                                 | ❌ (mpv or vlc)     | `sudo apt install mpv` / `winget install mpv` / `brew install mpv`                 |
 | **vlc**          | Alternative player                                        | ❌ (mpv or vlc)     | `sudo apt install vlc` / `winget install videolan.vlc` / `brew install --cask vlc` |
+| **chafa**        | Poster rendering in the TUI                               | ❌ (optional)       | `sudo apt install chafa` / `winget install chafa.chafa` / `brew install chafa`     |
 | **Node.js ≥ 22** | Only if you clone the repo and run from source (`npm ci`) | ⚠️ Source mode only | [`nodejs.org`](https://nodejs.org/) or your version manager                        |
 
 > 💡 None of these dependencies is strictly required to use the TUI or search.
@@ -209,11 +211,11 @@ git clone https://github.com/Angel-p-v/media-manager.git
 cd media-manager
 
 # Run the uninstaller (without sudo)
-sh installers/linux/uninstall.sh            # preserves configuration and database
+sh installers/linux/uninstall.sh            # preserves configuration, database and cache
 sh installers/linux/uninstall.sh --purge    # removes them too
 ```
 
-> 🛡️ The multimedia library is never touched.
+> 🛡️ The multimedia library is never touched. System dependencies such as `chafa` are not removed.
 
 #### macOS: if Gatekeeper blocks the binary
 

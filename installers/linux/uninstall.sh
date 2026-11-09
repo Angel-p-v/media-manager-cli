@@ -22,16 +22,18 @@ Desinstala media-manager-cli y el comando `mm`.
 Opciones:
   --prefix <dir>   prefijo usado en la instalación (por defecto, ~/.local)
   --bindir <dir>   directorio del wrapper (por defecto, <prefix>/bin)
-  --purge          elimina también configuración y base de datos
+  --purge          elimina también configuración, base de datos y caché
   --dry-run        muestra lo que haría sin borrar nada
   --yes            no pide confirmación
   --help           muestra esta ayuda
 
 Por defecto se conservan:
-  ~/.config/media-manager/   (o $XDG_CONFIG_HOME/media-manager)
-  ~/.local/share/media-manager/ (o $XDG_DATA_HOME/media-manager)
+  ~/.config/media-manager/        (o $XDG_CONFIG_HOME/media-manager)
+  ~/.local/share/media-manager/   (o $XDG_DATA_HOME/media-manager)
+  ~/.cache/media-manager/         (o $XDG_CACHE_HOME/media-manager)
 
-La biblioteca multimedia nunca se toca.
+La biblioteca multimedia nunca se toca. Las dependencias del sistema
+(por ejemplo chafa) no las instala ni las elimina este desinstalador.
 EOF
 }
 
@@ -134,6 +136,22 @@ if [ -n "${XDG_DATA_HOME:-}" ]; then
 else
   DATA_DIR="${HOME}/.local/share/media-manager"
 fi
+if [ -n "${XDG_CACHE_HOME:-}" ]; then
+  case "$XDG_CACHE_HOME" in
+    /*) CACHE_DIR="${XDG_CACHE_HOME}/media-manager" ;;
+    *) CACHE_DIR="${HOME}/.cache/media-manager" ;;
+  esac
+else
+  CACHE_DIR="${HOME}/.cache/media-manager"
+fi
+if [ -n "${XDG_STATE_HOME:-}" ]; then
+  case "$XDG_STATE_HOME" in
+    /*) STATE_DIR="${XDG_STATE_HOME}/media-manager" ;;
+    *) STATE_DIR="${HOME}/.local/state/media-manager" ;;
+  esac
+else
+  STATE_DIR="${HOME}/.local/state/media-manager"
+fi
 
 VERSION=""
 if [ -f "${APP_DIR}/install.json" ]; then
@@ -142,8 +160,13 @@ if [ -f "${APP_DIR}/install.json" ]; then
 fi
 
 if ! { [ -e "$APP_DIR" ] || [ -L "$APP_DIR" ]; }; then
-  say "No hay ninguna instalación de ${APP_NAME} en ${APP_DIR}."
-  exit 0
+  if [ "$PURGE" -eq 0 ]; then
+    say "No hay ninguna instalación de ${APP_NAME} en ${APP_DIR}."
+    exit 0
+  fi
+  # Con --purge seguimos: puede que la aplicación ya no esté, pero queden
+  # configuración, base de datos o caché por limpiar.
+  warn "no hay aplicación en ${APP_DIR}; se limpiarán los datos de --purge"
 fi
 
 say ""
@@ -153,9 +176,12 @@ say "  comando:    ${BINARY}"
 if [ "$PURGE" -eq 1 ]; then
   say "  configuración: ${CONFIG_DIR} (se eliminará)"
   say "  base de datos: ${DATA_DIR} (se eliminará)"
+  say "  caché:         ${CACHE_DIR} (se eliminará)"
+  say "  estado:        ${STATE_DIR} (se eliminará)"
 else
   say "  configuración: ${CONFIG_DIR} (se conserva)"
   say "  base de datos: ${DATA_DIR} (se conserva)"
+  say "  caché:         ${CACHE_DIR} (se conserva)"
 fi
 say ""
 
@@ -188,8 +214,14 @@ if [ "$PURGE" -eq 1 ]; then
 fi
 
 if [ -e "$BINARY" ] || [ -L "$BINARY" ]; then
-  step "eliminando ${BINARY}"
-  rm -f "$BINARY" || die 1 "no se pudo eliminar ${BINARY}"
+  # Solo borramos el wrapper si lo creó este instalador. Un `mm` ajeno en el
+  # mismo BINDIR no debe desaparecer por accidente.
+  if [ -f "$BINARY" ] && grep -q 'managed by media-manager-cli installer' "$BINARY" 2>/dev/null; then
+    step "eliminando ${BINARY}"
+    rm -f "$BINARY" || die 1 "no se pudo eliminar ${BINARY}"
+  else
+    warn "${BINARY} no parece haber sido creado por este instalador; se conserva"
+  fi
 fi
 
 if [ -e "$APP_DIR" ] || [ -L "$APP_DIR" ]; then
@@ -206,11 +238,19 @@ if [ "$PURGE" -eq 1 ]; then
     step "eliminando ${DATA_DIR}"
     rm -rf "$DATA_DIR" || die 1 "no se pudo eliminar ${DATA_DIR}"
   fi
+  if [ -e "$CACHE_DIR" ] || [ -L "$CACHE_DIR" ]; then
+    step "eliminando ${CACHE_DIR}"
+    rm -rf "$CACHE_DIR" || die 1 "no se pudo eliminar ${CACHE_DIR}"
+  fi
+  if [ -e "$STATE_DIR" ] || [ -L "$STATE_DIR" ]; then
+    step "eliminando ${STATE_DIR}"
+    rm -rf "$STATE_DIR" || die 1 "no se pudo eliminar ${STATE_DIR}"
+  fi
 fi
 
 say ""
 say "✔ ${APP_NAME} desinstalado"
 if [ "$PURGE" -ne 1 ]; then
-  say "  Se conservan ${CONFIG_DIR} y ${DATA_DIR}."
+  say "  Se conservan ${CONFIG_DIR}, ${DATA_DIR} y ${CACHE_DIR}."
   say "  Usa --purge para eliminarlos."
 fi
