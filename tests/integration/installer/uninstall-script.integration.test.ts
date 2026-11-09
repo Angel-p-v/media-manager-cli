@@ -17,6 +17,8 @@ describeLinux('uninstall.sh (integración)', () => {
   let wrapper: string;
   let configDir: string;
   let dataDir: string;
+  let cacheDir: string;
+  let stateDir: string;
   let artifactArchive: string;
 
   beforeEach(async () => {
@@ -27,11 +29,16 @@ describeLinux('uninstall.sh (integración)', () => {
     wrapper = path.join(prefix, 'bin', 'mm');
     configDir = path.join(home, '.config', 'media-manager');
     dataDir = path.join(home, '.local', 'share', 'media-manager');
+    cacheDir = path.join(home, '.cache', 'media-manager');
+    stateDir = path.join(home, '.local', 'state', 'media-manager');
     mkdirSync(home, { recursive: true });
     mkdirSync(configDir, { recursive: true });
     mkdirSync(dataDir, { recursive: true });
+    mkdirSync(path.join(cacheDir, 'posters'), { recursive: true });
+    mkdirSync(stateDir, { recursive: true });
     writeFileSync(path.join(configDir, 'config.yaml'), 'version: 1\n');
     writeFileSync(path.join(dataDir, 'library.db'), 'datos\n');
+    writeFileSync(path.join(cacheDir, 'posters', 'poster.png'), 'png\n');
 
     // Crear un artefacto local e instalarlo para las pruebas de desinstalación
     const artifact = createArtifact({ root: workDir, version: '1.0.0' });
@@ -62,15 +69,29 @@ describeLinux('uninstall.sh (integración)', () => {
     expect(existsSync(wrapper)).toBe(false);
     expect(existsSync(path.join(configDir, 'config.yaml'))).toBe(true);
     expect(existsSync(path.join(dataDir, 'library.db'))).toBe(true);
+    expect(existsSync(cacheDir)).toBe(true);
   });
 
-  it('--purge elimina también la configuración y la base de datos', () => {
+  it('--purge elimina también la configuración, la base de datos y la caché', () => {
     const result = uninstall(['--purge', '--yes']);
 
     expect(result.status).toBe(0);
     expect(existsSync(appDir)).toBe(false);
     expect(existsSync(configDir)).toBe(false);
     expect(existsSync(dataDir)).toBe(false);
+    expect(existsSync(cacheDir)).toBe(false);
+    expect(existsSync(stateDir)).toBe(false);
+  });
+
+  it('--purge limpia los datos aunque la aplicación ya no exista', () => {
+    rmSync(appDir, { recursive: true, force: true });
+
+    const result = uninstall(['--purge', '--yes']);
+
+    expect(result.status).toBe(0);
+    expect(existsSync(configDir)).toBe(false);
+    expect(existsSync(dataDir)).toBe(false);
+    expect(existsSync(cacheDir)).toBe(false);
   });
 
   it('--purge --dry-run no borra nada', () => {
@@ -100,6 +121,16 @@ describeLinux('uninstall.sh (integración)', () => {
     const result = uninstall(['--yes']);
     expect(result.status).toBe(0);
     expect(existsSync(foreignWrapper)).toBe(true);
+  });
+
+  it('no elimina un mm ajeno que no lleva la marca del instalador', () => {
+    writeFileSync(wrapper, '#!/bin/sh\necho ajeno\n');
+
+    const result = uninstall(['--yes']);
+
+    expect(result.status).toBe(0);
+    expect(existsSync(wrapper)).toBe(true);
+    expect(result.stderr).toContain('no parece haber sido creado por este instalador');
   });
 
   it('ignora un appDir manipulado en install.json', () => {

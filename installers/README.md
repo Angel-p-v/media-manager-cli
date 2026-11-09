@@ -26,10 +26,11 @@ installers/
 git clone https://github.com/Angel-p-v/media-manager.git
 cd media-manager
 npm ci
+npm run build
 sh installers/linux/install.sh
 ```
 
-Requiere `node` y `npm` instalados. El instalador usa `dist/` y `node_modules/` del repositorio clonado.
+Requiere `node` y `npm` instalados. El instalador usa `dist/` y `node_modules/` del repositorio clonado; si falta `dist/` avisa de que hay que ejecutar `npm run build`.
 
 #### Opción B: script suelto (release precompilado)
 
@@ -56,8 +57,8 @@ cd media-manager
 
 ```bash
 # Linux
-sh installers/linux/uninstall.sh            # conserva configuración y base de datos
-sh installers/linux/uninstall.sh --purge    # las elimina también
+sh installers/linux/uninstall.sh            # conserva configuración, base de datos y caché
+sh installers/linux/uninstall.sh --purge    # las elimina también (incluida la caché)
 ```
 
 ## Notas

@@ -24,8 +24,9 @@ NO_PATH_CHECK=0
 VERSION=""
 
 TMP_DIR=""
-INSTALL_MODE=""   # "repo" | "release"
-REPO_DIR=""       # directorio del repo clonado (modo repo)
+INSTALL_MODE=""     # "repo" | "release"
+REPO_DIR=""         # directorio del repo clonado (modo repo)
+APP_DIR_CREATED=0   # 1 si esta ejecución creó APP_DIR (para limpiar si falla)
 
 usage() {
   cat <<'EOF'
@@ -114,6 +115,11 @@ cleanup() {
   if [ -n "$TMP_DIR" ] && [ -d "$TMP_DIR" ]; then
     rm -rf "$TMP_DIR" 2>/dev/null || true
   fi
+  # Si la instalación falla a medias, no dejamos un APP_DIR vacío o parcial:
+  # la siguiente ejecución lo interpretaría como "ya instalado" (código 4).
+  if [ "$_status" -ne 0 ] && [ "${APP_DIR_CREATED:-0}" -eq 1 ] && [ -n "${APP_DIR:-}" ]; then
+    rm -rf "$APP_DIR" 2>/dev/null || true
+  fi
   exit "$_status"
 }
 trap cleanup EXIT
@@ -180,18 +186,33 @@ esac
 
 APP_DIR="${PREFIX}/share/${APP_NAME}"
 BINARY="${BINDIR}/mm"
-CONFIG_DIR="${HOME}/.config/media-manager"
+
+# Resolver directorios XDG igual que lo hace la aplicación (src/core/config/paths.ts)
+# para que el instalador y el desinstalador trabajen sobre las mismas rutas.
+if [ -n "${XDG_CONFIG_HOME:-}" ] && [ "${XDG_CONFIG_HOME#/}" != "$XDG_CONFIG_HOME" ]; then
+  CONFIG_DIR="${XDG_CONFIG_HOME}/media-manager"
+else
+  CONFIG_DIR="${HOME}/.config/media-manager"
+fi
+if [ -n "${XDG_DATA_HOME:-}" ] && [ "${XDG_DATA_HOME#/}" != "$XDG_DATA_HOME" ]; then
+  DATA_DIR="${XDG_DATA_HOME}/media-manager"
+else
+  DATA_DIR="${HOME}/.local/share/media-manager"
+fi
 CONFIG_FILE="${CONFIG_DIR}/config.yaml"
 
 # ---------------------------------------------------------------------------
 # Detectar modo de instalación: repo clonado o release descargado
 # ---------------------------------------------------------------------------
 
-detect_repo_dir() {
-  # Buscar dist/cli.js y package.json en el directorio actual o padre
+detect_repo_root() {
+  # Un repositorio clonado se reconoce por su package.json, tenga o no dist/.
+  # Así, si falta la compilación, damos un error claro en vez de descargar
+  # silenciosamente un release distinto al código local.
   _d="$(pwd)"
   while [ "$_d" != "/" ] && [ "$_d" != "." ]; do
-    if [ -f "$_d/dist/cli.js" ] && [ -f "$_d/package.json" ]; then
+    if [ -f "$_d/package.json" ] &&
+      grep -q '"name"[[:space:]]*:[[:space:]]*"media-manager-cli"' "$_d/package.json" 2>/dev/null; then
       printf '%s' "$_d"
       return 0
     fi
@@ -203,8 +224,8 @@ detect_repo_dir() {
 # MM_ASSET_URL fuerza modo release (útil para tests y archivo local)
 if [ -n "${MM_ASSET_URL:-}" ]; then
   INSTALL_MODE="release"
-elif detect_repo_dir >/dev/null 2>&1; then
-  REPO_DIR=$(detect_repo_dir)
+elif _repo_root=$(detect_repo_root); then
+  REPO_DIR=$_repo_root
   INSTALL_MODE="repo"
 else
   INSTALL_MODE="release"
@@ -215,10 +236,29 @@ fi
 # ---------------------------------------------------------------------------
 
 if [ -d "$APP_DIR" ]; then
-  [ "$FORCE" -eq 1 ] || die 4 "la versión ya está instalada en ${APP_DIR}; usa --force para reinstalar o ejecuta primero installers/linux/uninstall.sh"
+  if [ "$FORCE" -ne 1 ]; then
+    # Sin install.json el directorio es un resto de una instalación fallida
+    # (versiones anteriores lo creaban antes de descargar y validar el
+    # paquete). Se puede limpiar sin --force.
+    if [ -f "${APP_DIR}/install.json" ]; then
+      die 4 "la versión ya está instalada en ${APP_DIR}; usa --force para reinstalar o ejecuta primero installers/linux/uninstall.sh"
+    fi
+    if [ "$DRY_RUN" -eq 1 ]; then
+      step "restos de una instalación incompleta en ${APP_DIR} (se limpiarían)"
+    else
+      step "limpiando restos de una instalación incompleta en ${APP_DIR}"
+      rm -rf "$APP_DIR" || die 1 "no se pudieron limpiar los restos de ${APP_DIR}"
+    fi
+  fi
 fi
 if [ -e "$BINARY" ] || [ -L "$BINARY" ]; then
-  [ "$FORCE" -eq 1 ] || die 4 "${BINARY} existe y no lo gestiona este instalador; usa --force para reemplazarlo o desinstálalo primero con installers/linux/uninstall.sh"
+  if [ "$FORCE" -ne 1 ]; then
+    if [ -f "$BINARY" ] && grep -q 'managed by media-manager-cli installer' "$BINARY" 2>/dev/null; then
+      step "reemplazando el wrapper existente ${BINARY}"
+    else
+      die 4 "${BINARY} existe y no lo gestiona este instalador; usa --force para reemplazarlo o desinstálalo primero con installers/linux/uninstall.sh"
+    fi
+  fi
 fi
 
 if [ "$DRY_RUN" -eq 1 ]; then
@@ -230,13 +270,13 @@ if [ "$DRY_RUN" -eq 1 ]; then
   say "  destino:     ${APP_DIR}"
   say "  comando:     ${BINARY}"
   say "  config:      ${CONFIG_FILE}"
+  say "  datos:       ${DATA_DIR}"
   exit 0
 fi
 
 if [ -e "$PREFIX" ] && [ ! -d "$PREFIX" ]; then
   die 1 "$PREFIX existe y no es un directorio"
 fi
-mkdir -p "$APP_DIR" "$BINDIR" "$CONFIG_DIR" || die 1 "no se pudieron crear los directorios de instalación"
 
 # Instalar chafa para renderizado de pósters en terminal (si no está disponible)
 ensure_chafa
@@ -250,6 +290,10 @@ if [ "$INSTALL_MODE" = "repo" ]; then
 
   have node || die 1 "se necesita 'node' para instalar desde repositorio clonado"
 
+  if [ ! -f "${REPO_DIR}/dist/cli.js" ]; then
+    die 1 "no se encontró ${REPO_DIR}/dist/cli.js; ejecuta 'npm run build' antes de instalar"
+  fi
+
   if [ ! -d "${REPO_DIR}/node_modules" ]; then
     die 1 "no se encontró ${REPO_DIR}/node_modules; ejecute primero 'npm install' o 'npm ci' en el repositorio clonado"
   fi
@@ -258,12 +302,18 @@ if [ "$INSTALL_MODE" = "repo" ]; then
     _installed_version="desconocida"
 
   step "copiando dist/ en ${APP_DIR}"
-  cp -r "${REPO_DIR}/dist" "${APP_DIR}/dist" || die 1 "no se pudo copiar dist/"
+  mkdir -p "$APP_DIR" || die 1 "no se pudo crear el directorio de instalación"
+  APP_DIR_CREATED=1
+  # Reinstalar con --force no debe anidar dist/dist ni dejar restos del
+  # bundle standalone anterior (runtime propio y node_modules empaquetados).
+  rm -rf "${APP_DIR}/dist" "${APP_DIR}/node_modules" "${APP_DIR}/node" ||
+    die 1 "no se pudo limpiar la instalación anterior"
+  cp -R "${REPO_DIR}/dist" "${APP_DIR}/dist" || die 1 "no se pudo copiar dist/"
   if [ -f "${REPO_DIR}/package.json" ]; then
     cp "${REPO_DIR}/package.json" "${APP_DIR}/package.json" || die 1 "no se pudo copiar package.json"
   fi
   # Symlink de node_modules para que node resuelva las dependencias desde dist/
-  ln -s "${REPO_DIR}/node_modules" "${APP_DIR}/node_modules" 2>/dev/null || true
+  ln -s "${REPO_DIR}/node_modules" "${APP_DIR}/node_modules" || die 1 "no se pudo enlazar node_modules"
 
   # Crear script de entrada mm (heredoc con comillas: nada se expande aquí)
   cat > "${APP_DIR}/mm" <<'SCRIPT'
@@ -280,6 +330,11 @@ else
   # ---------------------------------------------------------------------------
 
   ASSET_URL_OVERRIDE="${MM_ASSET_URL:-}"
+
+  # Aceptar --version tanto "3.4.1" como "v3.4.1": el tag lleva la "v" y el
+  # nombre del asset no.
+  VERSION_NUM="${VERSION#v}"
+  VERSION_TAG="v${VERSION_NUM}"
 
   # Detectar sistema y arquitectura
   OS=$(uname -s | tr '[:upper:]' '[:lower:]')
@@ -302,7 +357,7 @@ else
     CHECKSUM_NAME="${ASSET_NAME}.sha256"
   elif [ -n "$VERSION" ]; then
     # Versión específica: nombre del asset conocido de antemano
-    ASSET_NAME="${APP_NAME}-${VERSION}-${OS_NAME}-${ARCH_NAME}.tar.gz"
+    ASSET_NAME="${APP_NAME}-${VERSION_NUM}-${OS_NAME}-${ARCH_NAME}.tar.gz"
     CHECKSUM_NAME="${ASSET_NAME}.sha256"
   else
     # Última versión: se obtendrá el nombre real del asset desde el JSON del release
@@ -338,7 +393,7 @@ else
     # Descargar el release
     step "obteniendo información del release"
     if [ -n "$VERSION" ]; then
-      RELEASE_URL="https://api.github.com/repos/${REPO}/releases/tags/${VERSION}"
+      RELEASE_URL="https://api.github.com/repos/${REPO}/releases/tags/${VERSION_TAG}"
     else
       RELEASE_URL="https://api.github.com/repos/${REPO}/releases/latest"
     fi
@@ -432,29 +487,49 @@ else
     [ "$_found" -eq 1 ] || EXTRACT_DIR="${TMP_DIR}"
   fi
 
-  if [ ! -d "${EXTRACT_DIR}/dist" ]; then
-    die 1 "el paquete no contiene el directorio dist/ esperado"
+  # Los releases actuales son bundles standalone: mm, node y
+  # node_modules/media-manager-cli/dist/cli.js. Los releases antiguos traían
+  # dist/ en la raíz. Soportamos ambos layouts.
+  if [ -d "${EXTRACT_DIR}/node_modules/${APP_NAME}/dist" ]; then
+    _layout="standalone"
+  elif [ -d "${EXTRACT_DIR}/dist" ]; then
+    _layout="legacy"
+  else
+    die 1 "el paquete no contiene una instalación válida (falta node_modules/${APP_NAME}/dist/ o dist/)"
   fi
 
   if [ -d "$APP_DIR" ]; then
     rm -rf "$APP_DIR" || die 1 "no se pudo eliminar la instalación anterior"
   fi
   mkdir -p "$APP_DIR" || die 1 "no se pudo crear el directorio de instalación"
-  cp -r "${EXTRACT_DIR}/dist" "${APP_DIR}/dist" || die 1 "no se pudo copiar dist/"
-  if [ -f "${EXTRACT_DIR}/package.json" ]; then
-    cp "${EXTRACT_DIR}/package.json" "${APP_DIR}/package.json" || die 1 "no se pudo copiar package.json"
-  fi
+  APP_DIR_CREATED=1
 
-  # El bundle standalone ya trae su propio binario de Node (raiz del paquete).
-  # Si existe, lo copiamos para que el CLI funcione sin Node en el sistema.
-  if [ -f "${EXTRACT_DIR}/node" ] && [ -x "${EXTRACT_DIR}/node" ]; then
-    cp "${EXTRACT_DIR}/node" "${APP_DIR}/node" || die 1 "no se pudo copiar el runtime de Node incluido"
-    chmod 755 "${APP_DIR}/node"
-  fi
+  if [ "$_layout" = "standalone" ]; then
+    step "copiando el bundle standalone en ${APP_DIR}"
+    cp -R "${EXTRACT_DIR}/." "${APP_DIR}/" || die 1 "no se pudo copiar el bundle"
+    if [ ! -f "${APP_DIR}/mm" ]; then
+      die 1 "el paquete no incluye el lanzador mm esperado"
+    fi
+    chmod 755 "${APP_DIR}/mm"
+    if [ -f "${APP_DIR}/node" ]; then
+      chmod 755 "${APP_DIR}/node" || die 1 "no se pudo hacer ejecutable el runtime de Node incluido"
+    fi
+  else
+    cp -R "${EXTRACT_DIR}/dist" "${APP_DIR}/dist" || die 1 "no se pudo copiar dist/"
+    if [ -f "${EXTRACT_DIR}/package.json" ]; then
+      cp "${EXTRACT_DIR}/package.json" "${APP_DIR}/package.json" || die 1 "no se pudo copiar package.json"
+    fi
 
-  # Crear script de entrada mm. Usa el Node incluido si esta disponible, si no
-  # el de PATH del sistema (modo repo y releases anteriores sin runtime).
-  cat > "${APP_DIR}/mm" <<'SCRIPT'
+    # El bundle standalone ya trae su propio binario de Node (raiz del paquete).
+    # Si existe, lo copiamos para que el CLI funcione sin Node en el sistema.
+    if [ -f "${EXTRACT_DIR}/node" ] && [ -x "${EXTRACT_DIR}/node" ]; then
+      cp "${EXTRACT_DIR}/node" "${APP_DIR}/node" || die 1 "no se pudo copiar el runtime de Node incluido"
+      chmod 755 "${APP_DIR}/node"
+    fi
+
+    # Crear script de entrada mm. Usa el Node incluido si esta disponible, si no
+    # el de PATH del sistema (releases antiguos sin runtime).
+    cat > "${APP_DIR}/mm" <<'SCRIPT'
 #!/bin/sh
 DIR="$(cd "$(dirname "$0")" && pwd)"
 if [ -x "$DIR/node" ]; then
@@ -463,7 +538,8 @@ else
   exec node "${DIR}/dist/cli.js" "$@"
 fi
 SCRIPT
-  chmod 755 "${APP_DIR}/mm"
+    chmod 755 "${APP_DIR}/mm"
+  fi
 
   _platform="${OS_NAME}-${ARCH_NAME}"
   _installed_version=""
@@ -474,7 +550,7 @@ fi
 # ---------------------------------------------------------------------------
 
 step "creando ${BINARY}"
-mkdir -p "$BINDIR"
+mkdir -p "$BINDIR" "$CONFIG_DIR" || die 1 "no se pudieron crear los directorios de instalación"
 cat > "${BINARY}" <<SCRIPT
 #!/bin/sh
 # managed by media-manager-cli installer
@@ -484,7 +560,7 @@ chmod 755 "${BINARY}"
 
 step "creando archivo de configuración por defecto"
 if [ ! -f "$CONFIG_FILE" ]; then
-  cat > "$CONFIG_FILE" <<'YAML'
+  cat > "$CONFIG_FILE" <<YAML
 version: 1
 
 library:
@@ -500,7 +576,7 @@ library:
     minSizeBytes: 0
 
 database:
-  path: ~/.local/share/media-manager/library.db
+  path: "${DATA_DIR}/library.db"
 
 player:
   default: mpv

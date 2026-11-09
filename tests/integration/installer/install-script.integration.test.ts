@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -52,6 +52,49 @@ describeLinux('install.sh (integración)', () => {
     const configContent = readFileSync(configFile, 'utf8');
     expect(configContent).toContain('version: 1');
     expect(configContent).toContain('library:');
+    expect(configContent).toContain(
+      path.join(home, '.local', 'share', 'media-manager', 'library.db'),
+    );
+
+    // El layout standalone debe copiarse completo (mm, node y node_modules).
+    const appDir = path.join(prefix, 'share', 'media-manager-cli');
+    expect(existsSync(path.join(appDir, 'mm'))).toBe(true);
+    expect(existsSync(path.join(appDir, 'node'))).toBe(true);
+    expect(
+      existsSync(path.join(appDir, 'node_modules', 'media-manager-cli', 'dist', 'cli.js')),
+    ).toBe(true);
+  });
+
+  it('acepta el layout antiguo con dist/ en la raíz', () => {
+    const legacy = createArtifact({ root: workDir, version: '2.0.0', layout: 'legacy' });
+    const result = runScript(INSTALL_SCRIPT, ['--prefix', prefix, '--no-path-check'], {
+      ...baseEnv(home),
+      MM_ASSET_URL: legacy.archive,
+    });
+
+    expect(result.status).toBe(0);
+    const wrapper = path.join(prefix, 'bin', 'mm');
+    const version = spawnSync(wrapper, ['--version'], { encoding: 'utf8' });
+    expect(version.stdout.trim()).toBe('2.0.0');
+  });
+
+  it('falla con un mensaje claro si el repositorio clonado no está compilado', () => {
+    const repo = path.join(workDir, 'repo-sin-dist');
+    mkdirSync(repo, { recursive: true });
+    writeFileSync(
+      path.join(repo, 'package.json'),
+      `${JSON.stringify({ name: 'media-manager-cli', version: '1.0.0' }, null, 2)}\n`,
+    );
+
+    const result = runScript(
+      INSTALL_SCRIPT,
+      ['--prefix', prefix, '--no-path-check'],
+      baseEnv(home),
+      repo,
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('npm run build');
   });
 
   it('se niega a reinstalar sin --force', () => {
@@ -74,6 +117,19 @@ describeLinux('install.sh (integración)', () => {
       env,
     );
     expect(forced.status).toBe(0);
+  });
+
+  it('limpia un APP_DIR vacío de una instalación fallida anterior', () => {
+    const appDir = path.join(prefix, 'share', 'media-manager-cli');
+    mkdirSync(appDir, { recursive: true });
+
+    const result = runScript(INSTALL_SCRIPT, ['--prefix', prefix, '--no-path-check'], {
+      ...baseEnv(home),
+      MM_ASSET_URL: artifactArchive,
+    });
+
+    expect(result.status).toBe(0);
+    expect(existsSync(path.join(appDir, 'install.json'))).toBe(true);
   });
 
   it('--dry-run no modifica el sistema de archivos', () => {
