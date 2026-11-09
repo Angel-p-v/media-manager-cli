@@ -6,6 +6,13 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 versionado [SemVer](https://semver.org/lang/es/). A partir de `v1.0.0`, release-please
 mantiene este archivo a partir de los commits convencionales.
 
+## [3.4.2](https://github.com/Angel-p-v/media-manager-cli/compare/v3.4.1...v3.4.2) (2026-11-09)
+
+
+### Bug Fixes
+
+* **cli:** instala bundles standalone y limpia restos al desinstalar ([#314](https://github.com/Angel-p-v/media-manager-cli/issues/314)) ([537454e](https://github.com/Angel-p-v/media-manager-cli/commit/537454eb439e2dac9413db329a0590f4fe34381c))
+
 ## [3.4.1](https://github.com/Angel-p-v/media-manager-cli/compare/v3.4.0...v3.4.1) (2026-11-07)
 
 
